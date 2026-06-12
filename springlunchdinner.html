@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Spring Audit Checklist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+        
+        button, input, textarea {
+            touch-action: manipulation;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @media print {
+            body { background-color: white !important; color: black !important; font-size: 11px !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-border { border: 1px solid #e5e7eb !important; }
+            .print-shadow-none { box-shadow: none !important; }
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
+            
+            input, textarea { 
+                border: none !important; 
+                background: transparent !important;
+                resize: none !important;
+                padding: 0 !important;
+            }
+            input::placeholder, textarea::placeholder { color: transparent !important; }
+            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+        }
+        
+        body.preview-mode { background-color: white !important; color: black !important; }
+        body.preview-mode .no-print { display: none !important; }
+        body.preview-mode .print-only { display: block !important; }
+        body.preview-mode input, body.preview-mode textarea { 
+            border: none !important; 
+            background: transparent !important;
+            pointer-events: none;
+        }
+        body.preview-mode #exit-preview-btn { display: flex !important; }
+
+        .status-btn.selected-compliant { background-color: #10b981; color: white; border-color: #10b981; }
+        .status-btn.selected-non-compliant { background-color: #ef4444; color: white; border-color: #ef4444; }
+        .status-btn.selected-na { background-color: #64748b; color: white; border-color: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 transition-transform hover:scale-105 hidden items-center gap-2">
+        <i class="fa-solid fa-eye-slash"></i> Exit Preview
+    </button>
+
+    <!-- Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transition-all transform scale-95 opacity-0" id="modal-content">
+            <div class="text-center">
+                <div class="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Delete Audit?</h3>
+                <p class="text-slate-500 text-sm mb-6">This action cannot be undone. All data and photos for this report will be permanently removed.</p>
+                <div class="flex gap-3">
+                    <button onclick="app.hideDeleteModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button onclick="app.confirmDelete()" class="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors shadow-sm shadow-red-200">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fa-solid fa-utensils text-indigo-600"></i>
+                    Spring Audit Checklist
+                </h1>
+                <p class="text-sm sm:text-base text-slate-500 mt-1">Manage and file your Spring Restaurant service and quality audits.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.createNewReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium flex-1 sm:flex-none justify-center flex items-center gap-2 transition-colors shadow-sm w-full sm:w-auto">
+                    <i class="fa-solid fa-plus"></i> New Spring Audit
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 bg-slate-50/50">
+                <h2 class="text-lg font-semibold text-slate-800">Recent Reports</h2>
+            </div>
+            <div id="empty-state" class="p-12 text-center text-slate-500 flex flex-col items-center hidden">
+                <i class="fa-solid fa-folder-open text-5xl text-slate-300 mb-4"></i>
+                <p class="text-lg">No audit reports filed yet.</p>
+            </div>
+            <ul id="report-list" class="divide-y divide-slate-100"></ul>
+        </div>
+    </div>
+
+    <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
+        <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 sticky top-0 z-50 gap-3">
+            <div class="flex justify-between w-full sm:w-auto items-center">
+                <button onclick="app.showDashboard()" class="text-slate-600 hover:text-slate-900 flex items-center gap-2 font-medium">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="app.togglePreview()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-eye"></i> Preview
+                </button>
+                <button onclick="app.saveReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-2 rounded-lg font-medium flex-1 sm:flex-none flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-save text-slate-500"></i> Save
+                </button>
+                <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg font-medium w-full sm:w-auto flex items-center justify-center gap-2 transition-colors">
+                    <i class="fa-solid fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Score Summary -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 print:mb-2 print:p-2">
+            <div>
+                <h2 class="text-xl font-bold text-slate-900 print:text-base">Audit Performance</h2>
+                <p class="text-sm text-slate-500 print:hidden">Real-time scoring</p>
+            </div>
+            <div id="score-card" class="flex gap-4 items-center">
+                <div class="text-center">
+                    <div id="score-percent" class="text-3xl font-black text-indigo-600 print:text-xl">0%</div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400">Total Score</div>
+                </div>
+                <div class="h-10 w-px bg-slate-100 print:h-6"></div>
+                <div class="flex gap-3 text-center">
+                    <div>
+                        <div id="count-compliant" class="text-lg font-bold text-emerald-600 print:text-sm">0</div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">Yes</div>
+                    </div>
+                    <div>
+                        <div id="count-non" class="text-lg font-bold text-red-500 print:text-sm">0</div>
+                        <div class="text-[10px] uppercase font-bold text-slate-400">No</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-6 print-border">
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date</label>
+                    <input type="date" id="meta-date" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('date', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Time</label>
+                    <input type="time" id="meta-time" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('time', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Session</label>
+                    <input type="text" id="meta-session" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('session', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Guest Name</label>
+                    <input type="text" id="meta-guestName" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('guestName', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Table</label>
+                    <input type="text" id="meta-roomNo" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('roomNo', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">GSA</label>
+                    <input type="text" id="meta-gsaName" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('gsaName', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Supervisor</label>
+                    <input type="text" id="meta-supervisor" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('supervisor', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Auditor</label>
+                    <input type="text" id="meta-auditorName" class="w-full border-b border-slate-200 py-1 text-sm bg-transparent" onchange="app.updateMeta('auditorName', this.value)">
+                </div>
+            </div>
+        </div>
+
+        <div id="checklist-container" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6 divide-y divide-slate-100 print-border">
+            <!-- Items via JS -->
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-border avoid-break">
+            <div class="flex justify-between items-center mb-3">
+                <label class="block text-lg font-bold text-slate-900">General Audit Observation</label>
+                <button onclick="app.triggerGeneralPhotoUpload()" class="no-print bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded text-sm font-medium border border-slate-200">
+                    <i class="fa-solid fa-camera mr-1"></i> Attach Photos
+                </button>
+            </div>
+            <textarea id="meta-observation" rows="5" class="w-full border border-slate-200 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-600 print:hidden" onchange="app.updateMeta('observation', this.value)"></textarea>
+            <div id="print-meta-observation" class="hidden print:block text-sm whitespace-pre-wrap min-h-[60px]"></div>
+            <div id="general-photos-container" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 empty:hidden"></div>
+        </div>
+
+        <input type="file" id="item-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleItemPhotoUpload(event)">
+        <input type="file" id="general-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleGeneralPhotoUpload(event)">
+    </div>
+
+    <script>
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
+        }
+
+        const AUDIT_QUESTIONS = [
+            "[Spring Audit] Has the individual maintained the required level of grooming throughout the shift?",
+            "[Spring Audit] Was eye contact successfully established during the greeting process?",
+            "[Spring Audit] Did the GSA initiate the greeting with a Namaste gesture and a visible smile?",
+            "[Spring Audit] Did the hostess enquire guest details (Name & Room number if applicable or for reservation)?",
+            "[Spring Audit] Did the GRE escort the guest to the preferred table?",
+            "[Spring Audit] Assisting the guest to sit by pulling the chair?",
+            "[Spring Audit] Was the table set with cutlery, crockery & glassware?",
+            "[Spring Audit] Preference of water?",
+            "[Spring Audit] Was buffet orientation carried out for guest?",
+            "[Spring Audit] Presenting the food & beverage Menu (QR CODE)?",
+            "[Spring Audit] Was beverage menu explained?",
+            "[Spring Audit] Time taken for service of beverage (Time)?",
+            "[Spring Audit] Whether the beverage name was announced before serving on the table?",
+            "[Spring Audit] Whether the name of the food was announced when brought on table?",
+            "[Spring Audit] Check with the guest to ensure he/she is happy with the food.",
+            "[Spring Audit] Checking for re-fill of beverages or bottle water.",
+            "[Spring Audit] Was bill prepared on time?",
+            "[Spring Audit] Was clearance done on time?",
+            "[Spring Audit] Body Language during the service.",
+            "[Spring Audit] Was there an interaction between the guest and the associate?",
+            "[Spring Audit] Was the live kitchen area and kitchen kept clean and tidy at all times?",
+            "[Spring Audit] Did the hotel associate have a good working knowledge of the English language and the menu?",
+            "[Spring Audit] Followed sequence of service all time.",
+            "[Spring Audit] Attentive observation of the table throughout their meal time.",
+            "[Spring Audit] Was botshot comment card given?",
+            "[Spring Audit] Did the team member take the effort to ask for ReviewPro / TripAdvisor / Zomato for reviews?",
+            "[Spring Audit] Farewell (Thank the guest, Invitation to visit us again).",
+            "[Maintenance] Flooring: Ensure all floor surfaces are pristine and show no signs of staining or structural damage.",
+            "[Maintenance] Seating: Confirm that all chairs are maintained in excellent condition, free from upholstery stains or wear.",
+            "[Maintenance] Upholstery Detail: Verify that the crevices and sides of the sofas are thoroughly cleared of any debris or food particles.",
+            "[Maintenance] Display Areas: Ensure the pigeonhole shelving and glass artifacts are meticulously dusted and polished.",
+            "[Maintenance] Wall Surfaces: Check that walls are unmarked, showing no scuffs, stains, or physical indentations.",
+            "[Maintenance] Tabletops: Maintain all tabletops in a high-polish state; please document the most recent polishing date."
+        ];
+
+        const app = {
+            reports: [],
+            currentReportId: null,
+            currentUploadIndex: null,
+            reportToDelete: null,
+            
+            init() {
+                const stored = localStorage.getItem('hotelSpringAuditsV1');
+                if (stored) {
+                    try {
+                        this.reports = JSON.parse(stored).filter(r => 
+                            r.meta.date !== '2026-03-06' && r.meta.date !== '2026-03-11'
+                        );
+                    } catch (e) { console.error(e); }
+                }
+                this.renderDashboard();
+            },
+
+            saveToLocal() {
+                localStorage.setItem('hotelSpringAuditsV1', JSON.stringify(this.reports));
+            },
+
+            showDashboard() {
+                document.body.classList.remove('preview-mode');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                document.getElementById('editor-view').classList.add('hidden');
+                this.renderDashboard();
+            },
+
+            createNewReport() {
+                const newReport = {
+                    id: Date.now().toString(),
+                    meta: { date: new Date().toISOString().split('T')[0], time: '', session: '', guestName: '', roomNo: '', gsaName: '', supervisor: '', auditorName: '', observation: '' },
+                    generalPhotos: [],
+                    items: {}
+                };
+                AUDIT_QUESTIONS.forEach((q, idx) => {
+                    newReport.items[idx] = { status: null, remarks: '', photos: [] };
+                });
+                this.reports.unshift(newReport);
+                this.currentReportId = newReport.id;
+                this.saveToLocal();
+                this.renderEditor();
+                document.getElementById('dashboard-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.remove('hidden');
+            },
+
+            openReport(id) {
+                this.currentReportId = id;
+                this.renderEditor();
+                document.getElementById('dashboard-view').classList.add('hidden');
+                document.getElementById('editor-view').classList.remove('hidden');
+            },
+
+            showDeleteModal(id, event) {
+                if (event) event.stopPropagation();
+                this.reportToDelete = id;
+                const modal = document.getElementById('delete-modal');
+                const content = document.getElementById('modal-content');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
+
+            hideDeleteModal() {
+                const modal = document.getElementById('delete-modal');
+                const content = document.getElementById('modal-content');
+                content.classList.add('scale-95', 'opacity-0');
+                content.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    this.reportToDelete = null;
+                }, 200);
+            },
+
+            confirmDelete() {
+                if (!this.reportToDelete) return;
+                this.reports = this.reports.filter(r => r.id !== this.reportToDelete);
+                this.saveToLocal();
+                this.hideDeleteModal();
+                this.renderDashboard();
+            },
+
+            getCurrentReport() {
+                return this.reports.find(r => r.id === this.currentReportId);
+            },
+
+            updateMeta(field, value) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.meta[field] = value;
+                    if (field === 'observation') document.getElementById('print-meta-observation').textContent = value;
+                    this.saveToLocal();
+                }
+            },
+
+            updateItemStatus(index, status) {
+                const report = this.getCurrentReport();
+                if (report) {
+                    report.items[index].status = (report.items[index].status === status) ? null : status;
+                    this.saveToLocal();
+                    this.renderChecklist();
+                    this.calculateScore();
+                }
+            },
+
+            calculateScore() {
+                const report = this.getCurrentReport();
+                if (!report) return;
+                let compliant = 0, evaluable = 0, nonCompliant = 0;
+                Object.values(report.items).forEach(item => {
+                    if (item.status === 'compliant') { compliant++; evaluable++; }
+                    else if (item.status === 'non-compliant') { nonCompliant++; evaluable++; }
+                });
+                const score = evaluable > 0 ? Math.round((compliant / evaluable) * 100) : 0;
+                document.getElementById('score-percent').textContent = score + '%';
+                document.getElementById('count-compliant').textContent = compliant;
+                document.getElementById('count-non').textContent = nonCompliant;
+            },
+
+            compressImage(file, callback) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX = 800; 
+                        let w = img.width, h = img.height;
+                        if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } }
+                        else { if (h > MAX) { w *= MAX/h; h = MAX; } }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        callback(canvas.toDataURL('image/jpeg', 0.7)); 
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            triggerItemPhotoUpload(index) {
+                this.currentUploadIndex = index;
+                document.getElementById('item-photo-upload').click();
+            },
+
+            handleItemPhotoUpload(event) {
+                const files = event.target.files;
+                const report = this.getCurrentReport();
+                if (!report || this.currentUploadIndex === null) return;
+                Array.from(files).forEach(file => {
+                    this.compressImage(file, base64 => {
+                        if (!report.items[this.currentUploadIndex].photos) report.items[this.currentUploadIndex].photos = [];
+                        report.items[this.currentUploadIndex].photos.push(base64);
+                        this.saveToLocal();
+                        this.renderChecklist();
+                    });
+                });
+            },
+
+            triggerGeneralPhotoUpload() {
+                document.getElementById('general-photo-upload').click();
+            },
+
+            handleGeneralPhotoUpload(event) {
+                const files = event.target.files;
+                const report = this.getCurrentReport();
+                Array.from(files).forEach(file => {
+                    this.compressImage(file, base64 => {
+                        report.generalPhotos.push(base64);
+                        this.saveToLocal();
+                        this.renderGeneralPhotos();
+                    });
+                });
+            },
+
+            renderDashboard() {
+                const list = document.getElementById('report-list');
+                const empty = document.getElementById('empty-state');
+                list.innerHTML = '';
+                if (this.reports.length === 0) {
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                empty.classList.add('hidden');
+                this.reports.forEach(r => {
+                    const li = document.createElement('li');
+                    li.className = "p-4 hover:bg-slate-50 cursor-pointer flex justify-between items-center group";
+                    li.onclick = () => this.openReport(r.id);
+                    li.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="bg-indigo-100 p-3 rounded-lg text-indigo-600"><i class="fa-solid fa-utensils"></i></div>
+                            <div>
+                                <h3 class="font-bold text-slate-900">${escapeHTML(r.meta.auditorName || 'New Audit')}</h3>
+                                <div class="text-xs text-slate-500">${r.meta.date} • ${escapeHTML(r.meta.guestName || 'No Guest')}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="app.showDeleteModal('${r.id}', event)" class="no-print p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+            },
+
+            renderEditor() {
+                const report = this.getCurrentReport();
+                if (!report) return;
+                Object.keys(report.meta).forEach(key => {
+                    const el = document.getElementById('meta-' + key);
+                    if (el) el.value = report.meta[key];
+                });
+                this.renderChecklist();
+                this.renderGeneralPhotos();
+                this.calculateScore();
+            },
+
+            renderChecklist() {
+                const report = this.getCurrentReport();
+                const container = document.getElementById('checklist-container');
+                container.innerHTML = '';
+                let lastCat = '';
+
+                AUDIT_QUESTIONS.forEach((q, idx) => {
+                    const item = report.items[idx];
+                    const cat = q.match(/^\[(.*?)\]/)[1];
+                    const cleanQ = q.replace(/^\[(.*?)\]\s*/, '');
+
+                    if (cat !== lastCat) {
+                        const h = document.createElement('div');
+                        h.className = "bg-slate-50 px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-y border-slate-100";
+                        h.textContent = cat;
+                        container.appendChild(h);
+                        lastCat = cat;
+                    }
+
+                    const photos = item.photos || [];
+                    const row = document.createElement('div');
+                    row.className = "p-4 flex flex-col gap-4 avoid-break";
+                    row.innerHTML = `
+                        <div class="flex flex-col md:flex-row justify-between gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-start gap-2">
+                                    <span class="text-slate-300 font-bold text-xs mt-0.5">${idx + 1}</span>
+                                    <div class="text-sm font-semibold text-slate-800 leading-snug">${cleanQ}</div>
+                                </div>
+                                <div class="hidden print:block text-[10px] font-bold mt-1 uppercase text-slate-500">
+                                    Status: ${item.status === 'compliant' ? '<span class="text-emerald-600">YES</span>' : item.status === 'non-compliant' ? '<span class="text-red-500">NO</span>' : '<span class="text-slate-400">N/A</span>'}
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2 w-full md:w-64">
+                                <div class="flex gap-1 no-print">
+                                    <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2 border rounded text-[10px] font-bold ${item.status === 'compliant' ? 'selected-compliant' : 'text-indigo-600'}">YES</button>
+                                    <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2 border rounded text-[10px] font-bold ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'text-indigo-600'}">NO</button>
+                                    <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2 border rounded text-[10px] font-bold ${item.status === 'na' ? 'selected-na' : 'text-slate-400'}">N/A</button>
+                                </div>
+                                <div class="no-print">
+                                    <button onclick="app.triggerItemPhotoUpload(${idx})" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-1.5 rounded text-[10px] font-bold border border-slate-200">
+                                        <i class="fa-solid fa-camera mr-1"></i> EVIDENCE (${photos.length})
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[9px] font-bold text-slate-400 uppercase no-print">Remarks</label>
+                                <textarea placeholder="Add remarks..." class="text-[11px] border-b border-slate-100 focus:border-indigo-400 outline-none bg-transparent py-1 w-full print:border-none" onchange="app.updateItemRemarks(${idx}, this.value)">${escapeHTML(item.remarks)}</textarea>
+                                <div class="hidden print:block text-[10px] text-slate-600 italic whitespace-pre-wrap">${escapeHTML(item.remarks || '')}</div>
+                            </div>
+                            <div class="flex gap-2 flex-wrap empty:hidden">
+                                ${photos.map(p => `<img src="${p}" class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border border-slate-200 shadow-sm print:w-40 print:h-40">`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            },
+
+            updateItemRemarks(idx, val) {
+                const r = this.getCurrentReport();
+                r.items[idx].remarks = val;
+                this.saveToLocal();
+            },
+
+            renderGeneralPhotos() {
+                const r = this.getCurrentReport();
+                const container = document.getElementById('general-photos-container');
+                container.innerHTML = r.generalPhotos.map(p => `
+                    <div class="aspect-square rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                        <img src="${p}" class="w-full h-full object-cover">
+                    </div>
+                `).join('');
+            },
+
+            togglePreview() {
+                document.body.classList.toggle('preview-mode');
+                window.scrollTo(0,0);
+            },
+
+            saveReport() {
+                this.saveToLocal();
+                alert("Audit saved successfully.");
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
