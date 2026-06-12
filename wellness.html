@@ -2,88 +2,353 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#4f46e5">
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
-    <title>Spa & Wellness Area Audit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f766e">
+    
+    <title>Wellness Audit Interactive Checklist</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
+        body { -webkit-tap-highlight-color: transparent; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @media print {
-            body { background-color: white !important; font-size: 11px !important; }
+            body { background-color: white !important; color: black !important; font-size: 10px !important; line-height: 1.2 !important; }
             .no-print { display: none !important; }
-            /* Force larger photos in print */
-            .print-photo { width: 12rem !important; height: 12rem !important; }
-            * { -webkit-print-color-adjust: exact !important; }
+            .print-only { display: block !important; }
+            .print-border { border: 1px solid #e5e7eb !important; }
+            .avoid-break { page-break-inside: avoid; }
+            input, textarea, select { border: none !important; background: transparent !important; resize: none !important; padding: 0 !important; appearance: none; }
+            .print\:w-48 { width: 12rem !important; }
+            .print\:h-48 { height: 12rem !important; }
+            .print\:text-\[10px\] { font-size: 10px !important; }
+            * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
         }
-        .status-btn.selected-compliant { background-color: #10b981; color: white; }
-        .status-btn.selected-non-compliant { background-color: #ef4444; color: white; }
-        .status-btn.selected-na { background-color: #64748b; color: white; }
+        body.preview-mode .no-print { display: none !important; }
+        body.preview-mode .print-only { display: block !important; }
+        body.preview-mode #exit-preview-btn { display: flex !important; }
+        
+        .status-btn.selected-compliant { background-color: #0f766e; color: white; border-color: #0f766e; }
+        .status-btn.selected-non-compliant { background-color: #115e59; color: white; border-color: #115e59; }
+        .status-btn.selected-na { background-color: #5eead4; color: #115e59; border-color: #5eead4; }
+        
+        #photo-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
+        #photo-lightbox.open { display:flex; }
+        #photo-lightbox img { max-width:94vw; max-height:94vh; object-fit:contain; border-radius:6px; box-shadow:0 0 60px rgba(0,0,0,0.8); animation:lbIn .15s ease; }
+        @keyframes lbIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+        #photo-lightbox-close { position:absolute; top:16px; right:20px; color:#fff; font-size:2rem; cursor:pointer; line-height:1; font-weight:700; }
+        @media print { #photo-lightbox { display:none !important; } }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-    <div id="editor-view" class="max-w-5xl mx-auto p-4 print:p-0">
-        <div id="checklist-container" class="divide-y divide-slate-100 bg-white rounded-xl border border-slate-200">
+    <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-teal-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 hidden items-center gap-2">
+        <i class="fa-solid fa-eye-slash"></i> Exit Preview
+    </button>
+
+    <div id="dashboard-view" class="max-w-5xl mx-auto p-4 sm:p-6">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 mt-4 gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fa-solid fa-spa text-teal-600"></i>
+                    Wellness Checklist
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">Audit Manager</p>
             </div>
+            <button onclick="app.createNewReport()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold w-full sm:w-auto shadow-lg transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i> New Audit Report
+            </button>
+        </header>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h2 class="font-bold text-slate-700 uppercase tracking-wider text-sm">Recent Audits</h2>
+            </div>
+            <ul id="report-list" class="divide-y divide-slate-100"></ul>
+            <div id="empty-state" class="p-10 sm:p-20 text-center text-slate-400 hidden">
+                <i class="fa-solid fa-folder-open text-5xl mb-4 opacity-20"></i>
+                <p>No audit reports found.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
+        <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 sticky top-4 z-40 gap-4">
+            <div class="flex flex-col">
+                <button onclick="app.showDashboard()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold text-sm transition-colors mb-1 w-fit">
+                    <i class="fa-solid fa-chevron-left"></i> Dashboard
+                </button>
+                <div id="report-size-badge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit">Storage Used: 0.0 MB</div>
+            </div>
+            <div class="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
+                <button onclick="app.togglePreview()" class="bg-slate-100 hover:bg-teal-50 text-teal-700 px-4 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 border border-teal-200 transition-colors">
+                    <i class="fa-solid fa-eye"></i> Preview
+                </button>
+                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md transition-colors">
+                    <i class="fa-solid fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 mb-6 print-border print:p-2 print:mb-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 print:gap-2">
+                <div class="sm:col-span-2 lg:col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Auditor Name</label>
+                    <input type="text" id="meta-modName" placeholder="Name" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" onchange="app.updateMeta('modName', this.value)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Date</label>
+                    <input type="date" id="meta-date" class="w-full border-b-2 border-slate-100 py-1 focus:border-teal-500 bg-transparent font-bold text-slate-800 no-print" onchange="app.updateMeta('date', this.value)">
+                </div>
+            </div>
+        </div>
+
+        <div id="checklist-container" class="space-y-4 sm:space-y-6 print:space-y-2"></div>
+
+        <input type="file" id="item-photo-upload" accept="image/*" multiple class="hidden" onchange="app.handleItemPhotoUpload(event)">
+    </div>
+
+    <div id="photo-lightbox" onclick="this.classList.remove('open')">
+        <span id="photo-lightbox-close" onclick="document.getElementById('photo-lightbox').classList.remove('open')">&times;</span>
+        <img id="photo-lightbox-img" src="" alt="Photo Evidence">
     </div>
 
     <script>
-        // ... (Keep existing app object)
+        "use strict";
 
-        // UPDATED COMPRESSION LOGIC
-        compressImage(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    // Increased resolution for crispness
-                    const MAX_SIZE = 1024; 
-                    let width = img.width;
-                    let height = img.height;
+        const AUDIT_QUESTIONS = Object.freeze([
+            "[Reception] Reception desk is clean and organized.",
+            "[Reception] Spa menu and materials are neatly arranged.",
+            "[Reception] Seating area is clean and comfortable",
+            "[Reception] Reception area lighting is adequate and functional",
+            "[Reception] Ambience & Atmosphere: Instrumental music is playing; lighting is dim/calm.",
+            "[Reception] Aromatherapy: Diffusers are working properly",
+            "[Reception] Refreshments: Welcome drinks are ready.",
+            "[Reception] Screen for products that have passed their expiration dates",
+            "[Saloon] The merchandise displays are neat, well organized, well stocked and inviting.",
+            "[Saloon] Manicure and pedicure stations are maintained in a sanitary condition",
+            "[Saloon] Maintenance: Please highlight with photos any areas that require maintenance attention.",
+            "[Saloon] Aromatherapy: Diffusers are working properly",
+            "[Treatment Rooms] Treatment beds are clean & disposal sheets are changed after every use.",
+            "[Treatment Rooms] All linens are fresh and stain-free ( bathrobe & towels).",
+            "[Treatment Rooms] Check that all equipment is clean and in good working order",
+            "[Treatment Rooms] Treatment room lighting is functional",
+            "[Treatment Rooms] Aromatherapy: Diffusers are working properly",
+            "[Treatment Rooms] Maintenance: Please highlight with photos any areas that require maintenance attention.",
+            "[Common Areas] Cleanliness - Cleanliness and maintenance of restrooms",
+            "[Common Areas] Amenities - Bodywash, shampoo, and conditioner dispensers are full and fresh towel supplies are in place.",
+            "[Common Areas] Functionality and cleanliness of water bodies. Please document the date of the last maintenance/cleaning session",
+            "[Common Areas] Maintenance: Please highlight with photos any areas that require maintenance attention.",
+            "[Wet Area] All guest entries for the wet area are recorded in the logbook.",
+            "[Jacuzzi (Mens)] Temperature Control: Jacuzzi jets and heating systems operational (Target: 40°C).",
+            "[Jacuzzi (Mens)] Safety & Cleanliness: Anti-Slip mats are placed around the rim, and grab bars are secure.",
+            "[Jacuzzi (Mens)] Linen - Blue-striped pool towels are neatly folded and properly stocked on the racks.",
+            "[Jacuzzi (Mens)] Please highlight with photos any areas that require maintenance attention.",
+            "[Jacuzzi (Mens)] Shower Area - Is clean, body wash, shampoo & conditioner dispensers are fully replenished, and all fixtures are free from scale buildup.",
+            "[Jacuzzi (Mens)] Washroom: Cleanliness verified; fixtures descaled; tissue dispensers restocked",
+            "[Jacuzzi (Mens)] Verify clock is in working condition",
+            "[Steam & Sauna Rooms (Mens)] Confirm cleanliness and full functionality of sauna and steam facilities",
+            "[Steam & Sauna Rooms (Mens)] Steam: Operational and producing continuous steam (Target: 50°C )",
+            "[Steam & Sauna Rooms (Mens)] Sauna: Operational and producing continuous heat (Target: 80°C )",
+            "[Steam & Sauna Rooms (Mens)] Waiter calling station -  Is correctly positioned and fully operational; perform a live test of the call button.",
+            "[Steam & Sauna Rooms (Mens)] Hair Dryer - Verify the functionality of the hair dryer.",
+            "[Steam & Sauna Rooms (Mens)] Maintenance: Please highlight with photos any areas that require maintenance attention.",
+            "[Jacuzzi (Womens)] Temperature Control: Jacuzzi jets and heating systems operational (Target: 40°C).",
+            "[Jacuzzi (Womens)] Safety & Cleanliness: Anti-Slip mats are placed around the rim, and grab bars are secure.",
+            "[Jacuzzi (Womens)] Linen - Blue-striped pool towels are neatly folded and properly stocked on the racks.",
+            "[Jacuzzi (Womens)] Shower Area - Is clean, body wash, shampoo & conditioner dispensers are fully replenished, and all fixtures are free from scale buildup.",
+            "[Jacuzzi (Womens)] Washroom: Cleanliness verified; fixtures descaled; tissue dispensers restocked",
+            "[Jacuzzi (Womens)] Verify clock is in working condition",
+            "[Jacuzzi (Womens)] Please highlight with photos any areas that require maintenance attention.",
+            "[Steam & Sauna Rooms (Womens)] Confirm cleanliness and full functionality of sauna and steam facilities",
+            "[Steam & Sauna Rooms (Womens)] Steam: Operational and producing continuous steam (Target: 50°C )",
+            "[Steam & Sauna Rooms (Womens)] Sauna: Operational and producing continuous heat (Target: 80°C )",
+            "[Steam & Sauna Rooms (Womens)] Waiter calling station -  Is correctly positioned and fully operational; perform a live test of the call button.",
+            "[Steam & Sauna Rooms (Womens)] Hair Dryer - Verify the functionality of the hair dryer",
+            "[Steam & Sauna Rooms (Womens)] Maintenance: Please highlight with photos any areas that require maintenance attention.",
+            "[Swimming Pool] Water Clarity Check: Is water clear and free from debris?",
+            "[Swimming Pool] Shower Area - Marble & SS fitting free from scaling marks.",
+            "[Swimming Pool] Waiter calling station -  Is correctly positioned and fully operational; perform a live test of the call button.",
+            "[Swimming Pool] Rescue Gear - Placed inside the frame and is in good condition (Shepherd’s hook, life ring with rope).",
+            "[Swimming Pool] Emergency Phone: Inspect physical condition and test functionality",
+            "[Swimming Pool] Signage: Are \"No Diving\" and depth indicators clearly legible?",
+            "[Swimming Pool] Pool Deck - Verify that pool deck furniture is correctly arranged and inspect upholstery for any stains or damage.",
+            "[Swimming Pool] Pool Deck Surface: Clean and free of standing water",
+            "[Swimming Pool] Handrails: Tight, corrosion-free, and stable.",
+            "[Swimming Pool] Linen - Designated towel collection bins are in place, undamaged, and kept clear of waste.",
+            "[Swimming Pool] Linen - Blue-striped pool towels are neatly folded and stored for efficient handover to guests.",
+            "[Swimming Pool] Hygiene Standards: Are shower facilities clean?",
+            "[Swimming Pool] Maintenance - Check sharp edges, chipped tiles and algae formation",
+            "[Swimming Pool] Maintenance - Is there any weed growth in the pool deck area? Is it cleaned?",
+            "[Swimming Pool] Disclaimers - Are disclaimers present in the pool area?",
+            "[Swimming Pool] Lawn Area - Ensure grass is properly trimmed, free of weeds, and identify any bald or damaged patches requiring attention",
+            "[Swimming Pool] Maintenance: Please highlight with photos any areas that require maintenance attention.",
+            "[Fitness Centre] Music: Music is active when guests are present and deactivated when the area is unoccupied.",
+            "[Fitness Centre] Television - Is active in mute mode when guests are present and powered off when the area is unoccupied",
+            "[Fitness Centre] Cleanliness : Mirror walls -Clean and streak-free.",
+            "[Fitness Centre] Power/Electrical: Frayed cords, loose plugs, or exposed wiring. Ensure all equipment is correctly grounded.",
+            "[Fitness Centre] Emergency Phone: Inspect physical condition and test functionality",
+            "[Fitness Centre] Guest Amenities: Ensure water stations is filled and stocked with cups.",
+            "[Fitness Centre] Check that recycling bins are emptied and Odor-free.",
+            "[Fitness Centre] Condition of disclaimers.",
+            "[Fitness Centre] Conditions: All equipment is in working condition and present with individual usage manual.",
+            "[Fitness Centre] Cleanliness: Verify that all fitness centre equipment is free from dust, including windowsills.",
+            "[Fitness Centre] First Aid Kit: Fully stocked and not expired.",
+            "[Fitness Centre] Maintenance: Please highlight with photos any areas that require maintenance attention.",
+            "[FCS Tickets] No of tickets raised.",
+            "[FCS Tickets] No of tickets pending.",
+            "[FCS Tickets] No of tickets closed",
+            "[Auditors Comment] Auditors Comment"
+        ]);
 
-                    if (width > height) {
-                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                    } else {
-                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+        const dbUtils = {
+            dbName: 'WellnessAuditDB', storeName: 'auditData',
+            init() { return new Promise((resolve, reject) => { const req = indexedDB.open(this.dbName, 1); req.onerror = () => reject(req.error); req.onsuccess = (e) => resolve(e.target.result); req.onupgradeneeded = (e) => e.target.result.createObjectStore(this.storeName); }); },
+            async get(key) { try { const db = await this.init(); return new Promise((resolve) => { const req = db.transaction(this.storeName, 'readonly').objectStore(this.storeName).get(key); req.onsuccess = () => resolve(req.result); }); } catch(e) { return null; } },
+            async set(key, value) { try { const db = await this.init(); return new Promise((resolve) => { const req = db.transaction(this.storeName, 'readwrite').objectStore(this.storeName).put(value, key); req.onsuccess = () => resolve(true); }); } catch(e) { return false; } }
+        };
+
+        const app = {
+            reports: [], currentReportId: null, currentUploadIndex: null,
+            async init() { let stored = await dbUtils.get('reports'); if (stored) this.reports = stored; this.renderDashboard(); },
+            async saveToLocal() { await dbUtils.set('reports', this.reports); },
+            showDashboard() { document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('editor-view').classList.add('hidden'); this.renderDashboard(); },
+            createNewReport() {
+                const newReport = { id: Date.now().toString(), meta: { date: new Date().toISOString().split('T')[0], modName: '', observation: '' }, items: {}, fcsData: { 'Technical Service': { raised: '', pending: '', completed: '', remarks: '' }, 'Housekeeping': { raised: '', pending: '', completed: '', remarks: '' } } };
+                AUDIT_QUESTIONS.forEach((q, idx) => { newReport.items[idx] = { status: null, remarks: '', photos: [] }; });
+                this.reports.unshift(newReport); this.currentReportId = newReport.id; this.saveToLocal(); this.renderEditor();
+                document.getElementById('dashboard-view').classList.add('hidden'); document.getElementById('editor-view').classList.remove('hidden');
+            },
+            openReport(id) { this.currentReportId = id; this.renderEditor(); document.getElementById('dashboard-view').classList.add('hidden'); document.getElementById('editor-view').classList.remove('hidden'); },
+            deleteReport(event, index) {
+                event.stopPropagation();
+                if (confirm('Are you sure you want to delete this audit report?')) {
+                    this.reports.splice(index, 1);
+                    this.saveToLocal();
+                    this.renderDashboard();
+                }
+            },
+            getCurrentReport() { return this.reports.find(r => r.id === this.currentReportId); },
+            updateMeta(field, value) { const r = this.getCurrentReport(); if(r) { r.meta[field] = value; this.saveToLocal(); } },
+            updateItemStatus(idx, status) { const r = this.getCurrentReport(); r.items[idx].status = (r.items[idx].status === status) ? null : status; this.saveToLocal(); this.renderChecklist(); },
+            updateItemRemarks(idx, value) { this.getCurrentReport().items[idx].remarks = value; this.saveToLocal(); },
+            updateFcsData(dept, field, value) { this.getCurrentReport().fcsData[dept][field] = value; this.saveToLocal(); },
+            triggerPhotoUpload(idx) { this.currentUploadIndex = idx; document.getElementById('item-photo-upload').click(); },
+            async handleItemPhotoUpload(event) {
+                const files = Array.from(event.target.files);
+                for(let file of files) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas'); const MAX = 800;
+                            let w = img.width, h = img.height;
+                            if (w > h) { h = Math.round(h * MAX / w); w = MAX; } else { w = Math.round(w * MAX / h); h = MAX; }
+                            canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                            this.getCurrentReport().items[this.currentUploadIndex].photos.push(canvas.toDataURL('image/jpeg', 0.6));
+                            this.saveToLocal(); this.renderChecklist();
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            },
+            removeItemPhoto(itemIdx, photoIdx) { this.getCurrentReport().items[itemIdx].photos.splice(photoIdx, 1); this.saveToLocal(); this.renderChecklist(); },
+            renderDashboard() {
+                const list = document.getElementById('report-list'); list.innerHTML = '';
+                document.getElementById('empty-state').classList.toggle('hidden', this.reports.length > 0);
+                this.reports.forEach((r, index) => {
+                    const li = document.createElement('li');
+                    li.className = "p-6 hover:bg-slate-50 flex items-center justify-between border-b border-slate-100";
+                    li.innerHTML = `
+                        <div class="cursor-pointer flex-1" onclick="app.openReport('${r.id}')">
+                            <h3 class="font-bold text-slate-800">${r.meta.modName || 'New Audit'}</h3>
+                            <p class="text-xs text-slate-400">${r.meta.date}</p>
+                        </div>
+                        <button onclick="app.deleteReport(event, ${index})" class="text-red-500 hover:text-red-700 p-2 transition-colors">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    `;
+                    list.appendChild(li);
+                });
+            },
+            renderEditor() {
+                const r = this.getCurrentReport();
+                document.getElementById('meta-modName').value = r.meta.modName || '';
+                document.getElementById('meta-date').value = r.meta.date || '';
+                this.renderChecklist();
+            },
+            renderChecklist() {
+                const r = this.getCurrentReport(); const container = document.getElementById('checklist-container'); container.innerHTML = '';
+                let currentCat = '';
+                let fcsTableRendered = false;
+
+                AUDIT_QUESTIONS.forEach((q, idx) => {
+                    const cat = q.match(/\[(.*?)\]/)[1]; const question = q.replace(/\[(.*?)\]\s*/, '');
+                    
+                    if (cat !== currentCat) {
+                        const header = document.createElement('div');
+                        header.className = "bg-teal-700 text-white px-5 py-2 mt-6 font-bold text-xs uppercase rounded-t-xl";
+                        header.textContent = cat; container.appendChild(header); currentCat = cat;
                     }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Add Timestamp
-                    const now = new Date();
-                    const timestampStr = now.toLocaleString();
-                    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-                    ctx.fillRect(width - 200, height - 40, 200, 40);
-                    ctx.fillStyle = "#ffffff";
-                    ctx.font = "bold 16px sans-serif";
-                    ctx.fillText(timestampStr, width - 190, height - 15);
-                    
-                    // 0.65 quality balances crispness with file size
-                    callback(canvas.toDataURL('image/jpeg', 0.65)); 
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        },
 
-        // UPDATED PHOTO RENDERING LOGIC
-        renderChecklist() {
-            // ... (Inside the loop)
-            const photosHtml = (itemData.photos || []).map((p, pIdx) => `
-                <div class="relative shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-lg border-2 border-slate-200 overflow-hidden print:w-48 print:h-48 print-photo">
-                    <img src="${p}" class="w-full h-full object-cover">
-                    <button onclick="app.removeItemPhoto(${index}, ${pIdx})" class="no-print absolute top-0 right-0 bg-red-500 text-white w-6 h-6 flex items-center justify-center">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-            `).join('');
-            // ...
-        }
+                    if (cat === 'FCS Tickets') {
+                        if (!fcsTableRendered) {
+                            const tableContainer = document.createElement('div');
+                            tableContainer.className = "bg-white border-x border-b border-slate-200 p-5 overflow-x-auto";
+                            let rowsHtml = '';
+                            ['Technical Service', 'Housekeeping'].forEach(dept => {
+                                rowsHtml += `
+                                    <tr class="border-b border-slate-100">
+                                        <td class="p-3 font-bold text-slate-800 text-sm whitespace-nowrap">${dept}</td>
+                                        ${['raised', 'pending', 'completed'].map(field => `
+                                            <td class="p-1"><input type="text" value="${r.fcsData[dept][field]}" onchange="app.updateFcsData('${dept}', '${field}', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-sm"></td>
+                                        `).join('')}
+                                        <td class="p-1"><textarea oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'" onchange="app.updateFcsData('${dept}', 'remarks', this.value)" class="w-full min-w-[120px] min-h-[40px] border border-slate-200 rounded px-2 py-1 text-sm resize-none overflow-hidden">${r.fcsData[dept]['remarks']}</textarea></td>
+                                    </tr>
+                                `;
+                            });
+                            tableContainer.innerHTML = `
+                                <table class="w-full border-collapse">
+                                    <thead>
+                                        <tr class="bg-teal-700 text-white text-xs uppercase">
+                                            <th class="p-3 text-left">Department</th>
+                                            <th class="p-3 w-16">Raised</th>
+                                            <th class="p-3 w-16">Pending</th>
+                                            <th class="p-3 w-16">Completed</th>
+                                            <th class="p-3 w-40">Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${rowsHtml}</tbody>
+                                </table>
+                            `;
+                            container.appendChild(tableContainer);
+                            fcsTableRendered = true;
+                        }
+                        return;
+                    }
+
+                    const item = r.items[idx];
+                    const row = document.createElement('div');
+                    row.className = "bg-white border-x border-b border-slate-200 p-5";
+                    row.innerHTML = `
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <div class="flex-1"><p class="text-sm font-bold text-slate-800">${question}</p>
+                                <textarea onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full mt-2 border border-slate-100 rounded-lg p-2 text-sm" placeholder="Observations...">${item.remarks}</textarea>
+                                <div class="flex gap-2 mt-2 flex-wrap">${item.photos.map((p, pi) => `<div class="relative"><img src="${p}" class="w-20 h-20 object-cover rounded"><button onclick="app.removeItemPhoto(${idx}, ${pi})" class="absolute top-0 right-0 bg-teal-600 text-white px-1 text-xs">x</button></div>`).join('')}</div>
+                            </div>
+                            <div class="flex flex-col gap-2 min-w-[150px]">
+                                <div class="flex gap-1"><button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50'}">YES</button><button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50'}">NO</button><button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status === 'na' ? 'selected-na' : 'bg-slate-50'}">N/A</button></div>
+                                <button onclick="app.triggerPhotoUpload(${idx})" class="text-xs bg-slate-50 py-2 rounded border border-slate-200">Add Photo</button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            },
+            togglePreview() { document.body.classList.toggle('preview-mode'); }
+        };
+        window.onload = () => app.init();
     </script>
 </body>
 </html>
