@@ -54,17 +54,23 @@
             input, textarea { border: none !important; border-bottom: 1px solid #e2e8f0 !important; border-radius: 0 !important; background: transparent !important; }
             
             .photo-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
+                display: flex;
+                flex-wrap: wrap;
                 gap: 10px;
                 margin-top: 10px;
                 page-break-inside: avoid;
             }
 
+            .photo-preview {
+                width: 200px !important;
+                height: auto !important;
+            }
+
             .photo-preview img { 
-                height: 200px !important;
+                height: auto !important;
+                max-height: 200px !important;
                 width: 100% !important;
-                object-fit: cover !important;
+                object-fit: contain !important;
                 border: 1.5px solid #e2e8f0;
                 border-radius: 8px;
             }
@@ -72,13 +78,13 @@
             .meta-section { margin-bottom: 30px; }
         }
 
-        .selected-compliant { background-color: #0d9488 !important; color: white !important; border-color: #0d9488 !important; }
-        .selected-non-compliant { background-color: #e11d48 !important; color: white !important; border-color: #e11d48 !important; }
-        .selected-na { background-color: #475569 !important; color: white !important; border-color: #475569 !important; }
+        .selected-compliant { background-color: #0d9488 !important; color: white !important; border-color: #0d9488 !important; box-shadow: 0 4px 6px -1px rgb(13 148 136 / 0.3); }
+        .selected-non-compliant { background-color: #e11d48 !important; color: white !important; border-color: #e11d48 !important; box-shadow: 0 4px 6px -1px rgb(225 29 72 / 0.3); }
+        .selected-na { background-color: #475569 !important; color: white !important; border-color: #475569 !important; box-shadow: 0 4px 6px -1px rgb(71 85 105 / 0.3); }
         
         .photo-preview img {
             width: 100%;
-            height: auto;
+            height: 100%;
             object-fit: cover;
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -128,6 +134,14 @@
             justify-content: center;
             padding: 20px;
         }
+
+        /* Lightbox */
+        #photo-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
+        #photo-lightbox.open { display:flex; }
+        #photo-lightbox img { max-width:94vw; max-height:94vh; object-fit:contain; border-radius:6px; box-shadow:0 0 60px rgba(0,0,0,0.8); animation:lbIn .15s ease; }
+        @keyframes lbIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+        #photo-lightbox-close { position:absolute; top:16px; right:20px; color:#fff; font-size:2rem; cursor:pointer; line-height:1; font-weight:700; }
+        @media print { #photo-lightbox { display:none !important; } }
     </style>
 </head>
 <body class="text-slate-800 antialiased font-sans">
@@ -166,7 +180,7 @@
 
     <!-- Header -->
     <header class="bg-teal-700 text-white p-4 sticky top-0 z-50 shadow-md no-print">
-        <div class="max-w-3xl mx-auto flex justify-between items-center w-full">
+        <div class="max-w-4xl mx-auto flex justify-between items-center w-full">
             <div>
                 <h1 class="font-bold text-lg leading-tight tracking-tight">Duty Manager Audit</h1>
                 <p id="audit-id-display" class="text-[9px] font-black opacity-50 uppercase tracking-widest mt-0.5">Session: Loading...</p>
@@ -190,7 +204,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="max-w-3xl mx-auto p-4 pb-32 w-full">
+    <main class="max-w-4xl mx-auto p-4 pb-32 w-full">
         
         <!-- Meta Form -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200 mb-8 shadow-sm print-border meta-section">
@@ -229,7 +243,7 @@
                     <i class="fa-solid fa-camera-retro text-xl"></i>
                     <span>Attach Photo</span>
                 </button>
-                <div id="handover-photos-preview" class="grid grid-cols-2 gap-3 mt-4"></div>
+                <div id="handover-photos-preview" class="flex gap-4 overflow-x-auto mt-4 hide-scrollbar"></div>
             </div>
 
             <div class="hidden print-only mb-8" id="handover-photos-print"></div>
@@ -249,20 +263,26 @@
 
     <!-- Floating Actions -->
     <div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 pt-4 pb-6 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.1)] z-40 no-print floating-action-area">
-        <div class="max-w-3xl mx-auto flex gap-4 w-full justify-between items-center">
-            <button onclick="window.print()" class="flex-none w-14 h-14 flex items-center justify-center bg-slate-100 text-slate-600 rounded-2xl border border-slate-200 active:scale-95">
+        <div class="max-w-4xl mx-auto flex gap-4 w-full justify-between items-center">
+            <button onclick="window.print()" class="flex-none w-14 h-14 flex items-center justify-center bg-slate-100 text-slate-600 rounded-2xl border border-slate-200 active:scale-95 transition-transform hover:bg-slate-200">
                 <i class="fa-solid fa-file-pdf text-lg"></i>
             </button>
-            <button id="save-btn" onclick="app.saveProgress()" class="flex-none px-6 h-14 flex items-center justify-center bg-slate-100 text-teal-600 rounded-2xl font-black text-xs border border-teal-200">
+            <button id="save-btn" onclick="app.saveProgress()" class="flex-none px-6 h-14 flex items-center justify-center bg-slate-100 text-teal-600 rounded-2xl font-black text-xs border border-teal-200 hover:bg-teal-50 transition-colors">
                 <span id="save-btn-content" class="flex items-center gap-2">
                     <i class="fa-solid fa-floppy-disk text-lg"></i> 
                     <span>SAVE</span>
                 </span>
             </button>
-            <button id="submit-btn" onclick="app.completeAudit()" class="flex-1 h-14 bg-teal-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-teal-600/40 active:scale-95 flex items-center justify-center gap-3">
+            <button id="submit-btn" onclick="app.completeAudit()" class="flex-1 h-14 bg-teal-600 hover:bg-teal-700 transition-colors text-white rounded-2xl font-black text-sm shadow-xl shadow-teal-600/40 active:scale-95 flex items-center justify-center gap-3">
                 <i class="fa-solid fa-circle-check text-xl"></i> COMPLETE
             </button>
         </div>
+    </div>
+
+    <!-- Photo Lightbox -->
+    <div id="photo-lightbox" onclick="this.classList.remove('open')">
+        <span id="photo-lightbox-close" onclick="document.getElementById('photo-lightbox').classList.remove('open')">&times;</span>
+        <img id="photo-lightbox-img" src="" alt="Photo Evidence">
     </div>
 
     <script>
@@ -287,14 +307,10 @@
             saveTimeout: null,
             
             init() {
-                // 1. Clean old storage first
                 this.cleanOldStorage(false);
-
-                // 2. Setup ID
                 localStorage.setItem('night_audit_session_id', this.auditId);
                 document.getElementById('audit-id-display').innerText = `Session: ${this.auditId}`;
                 
-                // 3. Initialize UI
                 const dateEl = document.getElementById('audit-date');
                 const timeEl = document.getElementById('audit-time');
                 if (dateEl) dateEl.valueAsDate = new Date();
@@ -315,7 +331,6 @@
                 const currentDataKey = `night_audit_data_${this.auditId}`;
                 
                 keys.forEach(key => {
-                    // Remove audit data older than 7 days OR remove all except current if manual
                     if (key.startsWith('night_audit_data_')) {
                         if (manual && key !== currentDataKey) {
                             localStorage.removeItem(key);
@@ -369,7 +384,6 @@
 
             confirmNewAudit() {
                 this.closeModal('confirm-modal');
-                // Force a memory clean of previous session when starting new
                 this.cleanOldStorage(true);
                 
                 this.auditId = `audit_${Date.now()}`;
@@ -510,10 +524,15 @@
                 if (comp === this.totalItems && btn) btn.classList.replace('bg-teal-600', 'bg-emerald-500');
             },
 
+            openLightbox(src) {
+                document.getElementById('photo-lightbox-img').src = src;
+                document.getElementById('photo-lightbox').classList.add('open');
+            },
+
             triggerPhotoUpload(target) {
                 const input = document.createElement('input');
                 input.type = 'file'; 
-                input.accept = 'image/jpeg, image/png'; 
+                input.accept = 'image/*'; 
                 input.capture = 'environment';
                 input.onchange = e => {
                     const file = e.target.files[0];
@@ -523,18 +542,28 @@
                             const img = new Image();
                             img.onload = () => {
                                 const canvas = document.createElement('canvas');
-                                const ctx = canvas.getContext('2d');
-                                // Smaller targets to save memory: 500x375
-                                const targetW = 500; const targetH = 375;
-                                canvas.width = targetW; canvas.height = targetH;
-                                ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, targetW, targetH);
+                                const MAX_SIZE = 1200; 
+                                let w = img.width, h = img.height;
                                 
-                                const ts = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).toUpperCase();
-                                ctx.font = `bold 16px sans-serif`; ctx.textAlign = "right"; ctx.fillStyle = "white";
-                                ctx.shadowColor = "black"; ctx.shadowBlur = 4;
-                                ctx.fillText(ts, targetW - 10, targetH - 10);
+                                if (w > h) { if (w > MAX_SIZE) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; } }
+                                else { if (h > MAX_SIZE) { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; } }
+                                
+                                canvas.width = w; canvas.height = h;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, w, h);
+                                
+                                // Scaled clear timestamp embedded into the image
+                                const ts = new Date().toLocaleString('en-IN');
+                                const fontSize = Math.max(18, Math.floor(w * 0.025)); 
+                                ctx.font = `${fontSize}px sans-serif`;
+                                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                                ctx.fillRect(0, h - (fontSize * 2.5), w, fontSize * 2.5);
+                                ctx.fillStyle = '#ffffff';
+                                ctx.fillText(ts, 15, h - (fontSize * 0.8));
 
-                                const data = canvas.toDataURL('image/jpeg', 0.6); // Lower quality to prevent storage full
+                                // Optimal compression to remain beneath the 10MB limit safely
+                                const data = canvas.toDataURL('image/jpeg', 0.75); 
+                                
                                 if (target === 'handover') {
                                     this.handoverPhotos.push(data);
                                     this.renderHandoverPhotos();
@@ -575,24 +604,38 @@
                                 ${state.remarks ? `<div class="text-[11px] text-slate-600 italic ml-10 mb-4 p-4 bg-slate-50 border-l-4 border-slate-300 rounded-r-lg">Findings: ${state.remarks}</div>` : ''}
                                 ${state.photos.length > 0 ? `<div class="photo-grid ml-10">${state.photos.map(p => `<div class="photo-preview"><img src="${p}"></div>`).join('')}</div>` : ''}
                             </div>
-                            <div class="bg-white p-6 rounded-[2rem] border border-slate-200 mb-6 shadow-sm no-print" data-idx="${gIdx}">
-                                <div class="flex justify-between items-start mb-6">
-                                    <span class="text-[10px] font-black text-slate-200 w-6 mt-1 flex-none">${gIdx + 1}.</span>
-                                    <p class="text-[15px] font-bold text-slate-800 flex-1 ml-2 leading-tight">${item.text}</p>
+                            
+                            <div class="bg-white p-5 sm:p-6 rounded-[2rem] border border-slate-200 mb-6 shadow-sm hover:shadow-md transition-shadow no-print" data-idx="${gIdx}">
+                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                                    <div class="lg:col-span-4 flex items-start">
+                                        <span class="text-[12px] font-black text-teal-600 w-6 mt-0.5 flex-none">${gIdx + 1}.</span>
+                                        <p class="text-[14px] font-bold text-slate-800 leading-tight">${item.text}</p>
+                                    </div>
+                                    
+                                    <div class="lg:col-span-5 flex flex-col w-full">
+                                        <textarea id="remarks-${gIdx}" oninput="app.updateRemarks(${gIdx}, this.value)" placeholder="Observations & Findings..." class="w-full text-sm font-medium bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-teal-500 text-slate-600 resize-none min-h-[56px] transition-colors" rows="2">${state.remarks}</textarea>
+                                    </div>
+
+                                    <div class="lg:col-span-3 flex flex-col gap-3 w-full">
+                                        <div class="flex gap-2 w-full">
+                                            <button onclick="app.updateItemStatus(${gIdx}, 'compliant')" data-status="compliant" class="status-btn flex-1 py-3 border border-slate-200 rounded-xl text-[10px] font-black tracking-[0.1em] transition-all ${state.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}">YES</button>
+                                            <button onclick="app.updateItemStatus(${gIdx}, 'non-compliant')" data-status="non-compliant" class="status-btn flex-1 py-3 border border-slate-200 rounded-xl text-[10px] font-black tracking-[0.1em] transition-all ${state.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}">NO</button>
+                                            <button onclick="app.updateItemStatus(${gIdx}, 'na')" data-status="na" class="status-btn flex-1 py-3 border border-slate-200 rounded-xl text-[10px] font-black tracking-[0.1em] transition-all ${state.status === 'na' ? 'selected-na' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}">N/A</button>
+                                        </div>
+                                        <button onclick="app.triggerPhotoUpload(${gIdx})" class="w-full flex items-center justify-center gap-2 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl border border-slate-200 transition-all text-[10px] font-black uppercase tracking-wider ${state.photos.length > 0 ? 'bg-teal-50 text-teal-700 border-teal-200' : ''}">
+                                            <i class="fa-solid fa-camera"></i> Add Evidence
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="space-y-6">
-                                    <div class="flex gap-2.5 w-full">
-                                        <button onclick="app.updateItemStatus(${gIdx}, 'compliant')" data-status="compliant" class="status-btn flex-1 py-4 border-2 border-slate-50 rounded-2xl text-[11px] font-black tracking-[0.1em] transition-all ${state.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50 text-slate-400'}">YES</button>
-                                        <button onclick="app.updateItemStatus(${gIdx}, 'non-compliant')" data-status="non-compliant" class="status-btn flex-1 py-4 border-2 border-slate-50 rounded-2xl text-[11px] font-black tracking-[0.1em] transition-all ${state.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50 text-slate-400'}">NO</button>
-                                        <button onclick="app.updateItemStatus(${gIdx}, 'na')" data-status="na" class="status-btn flex-1 py-4 border-2 border-slate-50 rounded-2xl text-[11px] font-black tracking-[0.1em] transition-all ${state.status === 'na' ? 'selected-na' : 'bg-slate-50 text-slate-400'}">N/A</button>
-                                    </div>
-                                    <div class="flex gap-3 items-start w-full">
-                                        <textarea id="remarks-${gIdx}" oninput="app.updateRemarks(${gIdx}, this.value)" placeholder="Observations..." class="flex-1 w-full text-sm font-semibold bg-slate-50 border-2 border-slate-50 rounded-2xl px-5 py-4 focus:outline-none focus:border-teal-500 text-slate-600 resize-none min-h-[56px]" rows="1">${state.remarks}</textarea>
-                                        <button onclick="app.triggerPhotoUpload(${gIdx})" class="evidence-btn w-[56px] h-[56px] flex-none flex items-center justify-center bg-slate-50 text-slate-400 rounded-2xl border-2 border-slate-50 transition-all ${state.photos.length > 0 ? 'bg-teal-50 text-teal-600 border-teal-200' : ''}"><i class="fa-solid fa-camera text-2xl"></i></button>
-                                    </div>
-                                    <div id="preview-container-${gIdx}" class="grid grid-cols-2 gap-3 mt-4 ${state.photos.length > 0 ? '' : 'hidden'}">
-                                        ${state.photos.map((p, pIdx) => `<div class="photo-preview border-2 border-slate-100 rounded-3xl overflow-hidden relative group"><img src="${p}"><button onclick="app.removePhoto(${gIdx}, ${pIdx})" class="absolute top-2 right-2 bg-rose-500 text-white w-8 h-8 rounded-xl flex items-center justify-center shadow-lg"><i class="fa-solid fa-trash-can text-sm"></i></button></div>`).join('')}
-                                    </div>
+                                
+                                <div id="preview-container-${gIdx}" class="flex gap-4 overflow-x-auto mt-5 hide-scrollbar ${state.photos.length > 0 ? '' : 'hidden'}">
+                                    ${state.photos.map((p, pIdx) => `
+                                    <div class="relative group shrink-0 w-32 h-32 sm:w-40 sm:h-40 border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-transform hover:scale-105">
+                                        <a href="${p}" target="_blank" onclick="event.preventDefault();app.openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
+                                            <img src="${p}" class="w-full h-full object-cover">
+                                        </a>
+                                        <button onclick="app.removePhoto(${gIdx}, ${pIdx})" class="absolute top-2 right-2 bg-rose-500 hover:bg-rose-600 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                                    </div>`).join('')}
                                 </div>
                             </div>`;
                         gIdx++;
@@ -606,7 +649,13 @@
             renderHandoverPhotos() {
                 const preview = document.getElementById('handover-photos-preview');
                 const print = document.getElementById('handover-photos-print');
-                const html = this.handoverPhotos.map((p, pIdx) => `<div class="photo-preview border-2 border-slate-100 rounded-3xl overflow-hidden relative group"><img src="${p}"><button onclick="app.removeHandoverPhoto(${pIdx})" class="absolute top-2 right-2 bg-rose-500 text-white w-8 h-8 rounded-xl flex items-center justify-center shadow-lg no-print"><i class="fa-solid fa-trash-can text-sm"></i></button></div>`).join('');
+                const html = this.handoverPhotos.map((p, pIdx) => `
+                    <div class="relative group shrink-0 w-32 h-32 sm:w-48 sm:h-48 border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-transform hover:scale-105">
+                        <a href="${p}" target="_blank" onclick="event.preventDefault();app.openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
+                            <img src="${p}" class="w-full h-full object-cover">
+                        </a>
+                        <button onclick="app.removeHandoverPhoto(${pIdx})" class="absolute top-2 right-2 bg-rose-500 hover:bg-rose-600 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg no-print opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    </div>`).join('');
                 if (preview) preview.innerHTML = html;
                 if (print) print.innerHTML = `<div class="photo-grid">${html}</div>`;
             },
