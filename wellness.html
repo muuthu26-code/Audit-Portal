@@ -138,7 +138,6 @@
     <script>
         "use strict";
 
-        // Global auto-resize function for textareas
         function autoResize(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = textarea.scrollHeight + 'px';
@@ -258,7 +257,6 @@
             },
             getCurrentReport() { return this.reports.find(r => r.id === this.currentReportId); },
             
-            // NEW: Function to calculate total photo size in MB
             calculateTotalStorage() {
                 const r = this.getCurrentReport();
                 if (!r) return "0.00";
@@ -267,18 +265,14 @@
                 Object.values(r.items).forEach(item => {
                     if (item.photos && item.photos.length > 0) {
                         item.photos.forEach(photo => {
-                            // Calculate Base64 size accurately: (length * 0.75)
-                            // Remove the "data:image/jpeg;base64," prefix for exact calculation
                             const base64StringLength = photo.length - (photo.indexOf(',') + 1);
                             totalBytes += Math.ceil(base64StringLength * 0.75);
                         });
                     }
                 });
-                
                 return (totalBytes / (1024 * 1024)).toFixed(2);
             },
             
-            // NEW: Function to update the storage UI badge with color warnings
             updateStorageBadge() {
                 const badge = document.getElementById('report-size-badge');
                 if (!badge) return;
@@ -311,23 +305,25 @@
                         const img = new Image();
                         img.onload = () => {
                             const canvas = document.createElement('canvas'); 
-                            const MAX = 1200; // Keep high resolution 
+                            
+                            // AGGRESSIVE COMPRESSION: Reduced max width to 800px 
+                            const MAX = 800; 
+                            
                             let w = img.width, h = img.height;
                             if (w > h) { h = Math.round(h * MAX / w); w = MAX; } else { w = Math.round(w * MAX / h); h = MAX; }
                             canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                             
-                            // MODIFIED: Reduced JPEG quality to 0.6 for better storage management
-                            this.getCurrentReport().items[this.currentUploadIndex].photos.push(canvas.toDataURL('image/jpeg', 0.6));
+                            // AGGRESSIVE COMPRESSION: Quality dropped to 0.5
+                            this.getCurrentReport().items[this.currentUploadIndex].photos.push(canvas.toDataURL('image/jpeg', 0.5));
                             
                             this.saveToLocal(); 
                             this.renderChecklist();
-                            this.updateStorageBadge(); // Update size UI
+                            this.updateStorageBadge(); 
                         };
                         img.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
                 }
-                // Clear the input so the same file can be selected again if needed
                 event.target.value = '';
             },
             
@@ -335,7 +331,7 @@
                 this.getCurrentReport().items[itemIdx].photos.splice(photoIdx, 1); 
                 this.saveToLocal(); 
                 this.renderChecklist(); 
-                this.updateStorageBadge(); // Update size UI
+                this.updateStorageBadge();
             },
             
             renderDashboard() {
@@ -362,7 +358,7 @@
                 document.getElementById('meta-modName').value = r.meta.modName || '';
                 document.getElementById('meta-date').value = r.meta.date || '';
                 this.renderChecklist();
-                this.updateStorageBadge(); // Initialize badge on load
+                this.updateStorageBadge();
             },
             
             renderChecklist() {
@@ -441,10 +437,7 @@
                     container.appendChild(row);
                 });
 
-                // Ensure all textareas resize correctly immediately after rendering
-                setTimeout(() => {
-                    document.querySelectorAll('textarea').forEach(autoResize);
-                }, 0);
+                setTimeout(() => { document.querySelectorAll('textarea').forEach(autoResize); }, 0);
             },
             togglePreview() { document.body.classList.toggle('preview-mode'); }
         };
