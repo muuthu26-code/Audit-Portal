@@ -13,20 +13,40 @@
         body { -webkit-tap-highlight-color: transparent; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Ensure textareas wrap and expand properly */
+        textarea {
+            width: 100%;
+            display: block;
+            overflow: hidden;
+            resize: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
         @media print {
             body { background-color: white !important; color: black !important; font-size: 10px !important; line-height: 1.2 !important; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             .print-border { border: 1px solid #e5e7eb !important; }
+            input, select { border: none !important; background: transparent !important; padding: 0 !important; appearance: none; }
+            
+            /* Forces textareas to show all content in PDF */
+            textarea {
+                height: auto !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+            
+            /* Ensure photos and elements don't break across pages */
             .avoid-break { page-break-inside: avoid; }
-            input, textarea, select { border: none !important; background: transparent !important; resize: none !important; padding: 0 !important; appearance: none; }
+            
             .print\:w-48 { width: 12rem !important; }
-            .print\:h-auto { height: auto !important; }
-            .print\:max-h-48 { max-height: 12rem !important; }
-            .print\:object-contain { object-fit: contain !important; }
+            .print\:h-48 { height: 12rem !important; }
             .print\:text-\[10px\] { font-size: 10px !important; }
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
         }
+        
         body.preview-mode .no-print { display: none !important; }
         body.preview-mode .print-only { display: block !important; }
         body.preview-mode #exit-preview-btn { display: flex !important; }
@@ -74,18 +94,15 @@
         </div>
     </div>
 
-    <div id="editor-view" class="max-w-6xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
+    <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
         <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 sticky top-4 z-40 gap-4">
             <div class="flex flex-col">
                 <button onclick="app.showDashboard()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold text-sm transition-colors mb-1 w-fit">
                     <i class="fa-solid fa-chevron-left"></i> Dashboard
                 </button>
-                <div id="report-size-badge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit transition-colors">Storage Used: 0.00 MB</div>
+                <div id="report-size-badge" class="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit transition-colors duration-300">Storage Used: 0.00 MB</div>
             </div>
             <div class="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
-                <button onclick="app.saveReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 shadow-md transition-colors">
-                    <i class="fa-solid fa-save"></i> <span id="save-btn-text">Save</span>
-                </button>
                 <button onclick="app.togglePreview()" class="bg-slate-100 hover:bg-teal-50 text-teal-700 px-4 py-2 rounded-lg font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 border border-teal-200 transition-colors">
                     <i class="fa-solid fa-eye"></i> Preview
                 </button>
@@ -120,6 +137,12 @@
 
     <script>
         "use strict";
+
+        // Global auto-resize function for textareas
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
 
         const AUDIT_QUESTIONS = Object.freeze([
             "[Reception] Reception desk is clean and organized.",
@@ -216,30 +239,15 @@
         const app = {
             reports: [], currentReportId: null, currentUploadIndex: null,
             async init() { let stored = await dbUtils.get('reports'); if (stored) this.reports = stored; this.renderDashboard(); },
-            
-            // Manual save explicitly replacing auto-save functionality
             async saveToLocal() { await dbUtils.set('reports', this.reports); },
-            async saveReport() {
-                await this.saveToLocal();
-                const btnText = document.getElementById('save-btn-text');
-                if(btnText) {
-                    const original = btnText.innerText;
-                    btnText.innerText = 'Saved!';
-                    setTimeout(() => { btnText.innerText = original; }, 2000);
-                }
-            },
-
             showDashboard() { document.getElementById('dashboard-view').classList.remove('hidden'); document.getElementById('editor-view').classList.add('hidden'); this.renderDashboard(); },
-            
             createNewReport() {
                 const newReport = { id: Date.now().toString(), meta: { date: new Date().toISOString().split('T')[0], modName: '', observation: '' }, items: {}, fcsData: { 'Technical Service': { raised: '', pending: '', completed: '', remarks: '' }, 'Housekeeping': { raised: '', pending: '', completed: '', remarks: '' } } };
                 AUDIT_QUESTIONS.forEach((q, idx) => { newReport.items[idx] = { status: null, remarks: '', photos: [] }; });
-                this.reports.unshift(newReport); this.currentReportId = newReport.id; this.renderEditor();
+                this.reports.unshift(newReport); this.currentReportId = newReport.id; this.saveToLocal(); this.renderEditor();
                 document.getElementById('dashboard-view').classList.add('hidden'); document.getElementById('editor-view').classList.remove('hidden');
             },
-            
             openReport(id) { this.currentReportId = id; this.renderEditor(); document.getElementById('dashboard-view').classList.add('hidden'); document.getElementById('editor-view').classList.remove('hidden'); },
-            
             deleteReport(event, index) {
                 event.stopPropagation();
                 if (confirm('Are you sure you want to delete this audit report?')) {
@@ -248,12 +256,51 @@
                     this.renderDashboard();
                 }
             },
-            
             getCurrentReport() { return this.reports.find(r => r.id === this.currentReportId); },
-            updateMeta(field, value) { const r = this.getCurrentReport(); if(r) { r.meta[field] = value; } },
-            updateItemStatus(idx, status) { const r = this.getCurrentReport(); r.items[idx].status = (r.items[idx].status === status) ? null : status; this.renderChecklist(); },
-            updateItemRemarks(idx, value) { this.getCurrentReport().items[idx].remarks = value; },
-            updateFcsData(dept, field, value) { this.getCurrentReport().fcsData[dept][field] = value; },
+            
+            // NEW: Function to calculate total photo size in MB
+            calculateTotalStorage() {
+                const r = this.getCurrentReport();
+                if (!r) return "0.00";
+                
+                let totalBytes = 0;
+                Object.values(r.items).forEach(item => {
+                    if (item.photos && item.photos.length > 0) {
+                        item.photos.forEach(photo => {
+                            // Calculate Base64 size accurately: (length * 0.75)
+                            // Remove the "data:image/jpeg;base64," prefix for exact calculation
+                            const base64StringLength = photo.length - (photo.indexOf(',') + 1);
+                            totalBytes += Math.ceil(base64StringLength * 0.75);
+                        });
+                    }
+                });
+                
+                return (totalBytes / (1024 * 1024)).toFixed(2);
+            },
+            
+            // NEW: Function to update the storage UI badge with color warnings
+            updateStorageBadge() {
+                const badge = document.getElementById('report-size-badge');
+                if (!badge) return;
+                
+                const sizeMB = parseFloat(this.calculateTotalStorage());
+                
+                if (sizeMB >= 8.5) {
+                    badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-red-100 text-red-600 border border-red-300 uppercase w-fit animate-pulse shadow-sm";
+                    badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Warning: ${sizeMB} MB (Near 10MB Limit)`;
+                } else if (sizeMB >= 7.0) {
+                    badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-orange-100 text-orange-600 border border-orange-200 uppercase w-fit";
+                    badge.textContent = `Storage Used: ${sizeMB} MB`;
+                } else {
+                    badge.className = "text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200 uppercase w-fit";
+                    badge.textContent = `Storage Used: ${sizeMB} MB`;
+                }
+            },
+
+            updateMeta(field, value) { const r = this.getCurrentReport(); if(r) { r.meta[field] = value; this.saveToLocal(); } },
+            updateItemStatus(idx, status) { const r = this.getCurrentReport(); r.items[idx].status = (r.items[idx].status === status) ? null : status; this.saveToLocal(); this.renderChecklist(); },
+            updateItemRemarks(idx, value) { this.getCurrentReport().items[idx].remarks = value; this.saveToLocal(); },
+            updateFcsData(dept, field, value) { this.getCurrentReport().fcsData[dept][field] = value; this.saveToLocal(); },
             triggerPhotoUpload(idx) { this.currentUploadIndex = idx; document.getElementById('item-photo-upload').click(); },
             
             async handleItemPhotoUpload(event) {
@@ -264,59 +311,33 @@
                         const img = new Image();
                         img.onload = () => {
                             const canvas = document.createElement('canvas'); 
-                            const MAX = 1200; // Increased resolution for better clarity
+                            const MAX = 1200; // Keep high resolution 
                             let w = img.width, h = img.height;
                             if (w > h) { h = Math.round(h * MAX / w); w = MAX; } else { w = Math.round(w * MAX / h); h = MAX; }
-                            canvas.width = w; canvas.height = h; 
+                            canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                             
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, w, h);
+                            // MODIFIED: Reduced JPEG quality to 0.6 for better storage management
+                            this.getCurrentReport().items[this.currentUploadIndex].photos.push(canvas.toDataURL('image/jpeg', 0.6));
                             
-                            // Embed Timestamp overlay on the photo 
-                            const timestamp = new Date().toLocaleString('en-IN');
-                            const fontSize = Math.max(18, Math.floor(w * 0.025)); 
-                            ctx.font = `${fontSize}px sans-serif`;
-                            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                            ctx.fillRect(0, h - (fontSize * 2), w, fontSize * 2);
-                            ctx.fillStyle = '#ffffff';
-                            ctx.fillText(timestamp, 15, h - (fontSize * 0.6));
-
-                            // Save with balanced compression for 10MB limit PDF consideration
-                            this.getCurrentReport().items[this.currentUploadIndex].photos.push(canvas.toDataURL('image/jpeg', 0.75));
+                            this.saveToLocal(); 
                             this.renderChecklist();
+                            this.updateStorageBadge(); // Update size UI
                         };
                         img.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
                 }
-                event.target.value = ""; // Reset input
+                // Clear the input so the same file can be selected again if needed
+                event.target.value = '';
             },
             
-            removeItemPhoto(itemIdx, photoIdx) { this.getCurrentReport().items[itemIdx].photos.splice(photoIdx, 1); this.renderChecklist(); },
+            removeItemPhoto(itemIdx, photoIdx) { 
+                this.getCurrentReport().items[itemIdx].photos.splice(photoIdx, 1); 
+                this.saveToLocal(); 
+                this.renderChecklist(); 
+                this.updateStorageBadge(); // Update size UI
+            },
             
-            openLightbox(src) {
-                document.getElementById('photo-lightbox-img').src = src;
-                document.getElementById('photo-lightbox').classList.add('open');
-            },
-
-            updateStorageBadge() {
-                const r = this.getCurrentReport();
-                if (!r) return;
-                const sizeBytes = new Blob([JSON.stringify(r)]).size;
-                const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(2);
-                const badge = document.getElementById('report-size-badge');
-                if (badge) {
-                    badge.textContent = `Storage Used: ${sizeMB} MB`;
-                    if (sizeMB > 9.0) {
-                        badge.classList.remove('bg-slate-100', 'text-slate-500');
-                        badge.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
-                    } else {
-                        badge.classList.add('bg-slate-100', 'text-slate-500');
-                        badge.classList.remove('bg-red-100', 'text-red-700', 'border-red-300');
-                    }
-                }
-            },
-
             renderDashboard() {
                 const list = document.getElementById('report-list'); list.innerHTML = '';
                 document.getElementById('empty-state').classList.toggle('hidden', this.reports.length > 0);
@@ -341,6 +362,7 @@
                 document.getElementById('meta-modName').value = r.meta.modName || '';
                 document.getElementById('meta-date').value = r.meta.date || '';
                 this.renderChecklist();
+                this.updateStorageBadge(); // Initialize badge on load
             },
             
             renderChecklist() {
@@ -353,23 +375,23 @@
                     
                     if (cat !== currentCat) {
                         const header = document.createElement('div');
-                        header.className = "bg-teal-700 text-white px-5 py-2 mt-6 font-bold text-xs uppercase rounded-t-xl shadow-sm";
+                        header.className = "bg-teal-700 text-white px-5 py-2 mt-6 font-bold text-xs uppercase rounded-t-xl avoid-break";
                         header.textContent = cat; container.appendChild(header); currentCat = cat;
                     }
 
                     if (cat === 'FCS Tickets') {
                         if (!fcsTableRendered) {
                             const tableContainer = document.createElement('div');
-                            tableContainer.className = "bg-white border-x border-b border-slate-200 p-5 overflow-x-auto";
+                            tableContainer.className = "bg-white border-x border-b border-slate-200 p-5 overflow-x-auto avoid-break";
                             let rowsHtml = '';
                             ['Technical Service', 'Housekeeping'].forEach(dept => {
                                 rowsHtml += `
                                     <tr class="border-b border-slate-100">
                                         <td class="p-3 font-bold text-slate-800 text-sm whitespace-nowrap">${dept}</td>
                                         ${['raised', 'pending', 'completed'].map(field => `
-                                            <td class="p-1"><input type="text" value="${r.fcsData[dept][field]}" onchange="app.updateFcsData('${dept}', '${field}', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-teal-500 bg-slate-50"></td>
+                                            <td class="p-1"><input type="text" value="${r.fcsData[dept][field]}" onchange="app.updateFcsData('${dept}', '${field}', this.value)" class="w-full border border-slate-200 rounded px-2 py-1 text-sm"></td>
                                         `).join('')}
-                                        <td class="p-1"><textarea oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'" onchange="app.updateFcsData('${dept}', 'remarks', this.value)" class="w-full min-w-[120px] min-h-[40px] border border-slate-200 rounded px-2 py-1 text-sm resize-none overflow-hidden focus:ring-1 focus:ring-teal-500 bg-slate-50">${r.fcsData[dept]['remarks']}</textarea></td>
+                                        <td class="p-1"><textarea oninput="autoResize(this)" onchange="app.updateFcsData('${dept}', 'remarks', this.value)" class="w-full min-w-[120px] min-h-[40px] border border-slate-200 rounded px-2 py-1 text-sm">${r.fcsData[dept]['remarks']}</textarea></td>
                                     </tr>
                                 `;
                             });
@@ -377,11 +399,11 @@
                                 <table class="w-full border-collapse">
                                     <thead>
                                         <tr class="bg-teal-700 text-white text-xs uppercase">
-                                            <th class="p-3 text-left font-bold">Department</th>
-                                            <th class="p-3 w-16 font-bold">Raised</th>
-                                            <th class="p-3 w-16 font-bold">Pending</th>
-                                            <th class="p-3 w-16 font-bold">Completed</th>
-                                            <th class="p-3 w-40 font-bold">Remarks</th>
+                                            <th class="p-3 text-left">Department</th>
+                                            <th class="p-3 w-16">Raised</th>
+                                            <th class="p-3 w-16">Pending</th>
+                                            <th class="p-3 w-16">Completed</th>
+                                            <th class="p-3 w-40">Remarks</th>
                                         </tr>
                                     </thead>
                                     <tbody>${rowsHtml}</tbody>
@@ -395,41 +417,34 @@
 
                     const item = r.items[idx];
                     const row = document.createElement('div');
-                    row.className = "bg-white border-x border-b border-slate-200 p-4 sm:p-5 hover:bg-slate-50/50 transition-colors";
-                    
-                    // Professional Grid Alignment implementation
+                    row.className = "bg-white border-x border-b border-slate-200 p-5 avoid-break";
                     row.innerHTML = `
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                            <div class="lg:col-span-5 flex flex-col">
-                                <p class="text-sm font-bold text-slate-800">${question}</p>
-                            </div>
-                            
-                            <div class="lg:col-span-4 flex flex-col">
-                                <textarea onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-teal-500 transition-all bg-slate-50" placeholder="Observations...">${item.remarks}</textarea>
-                            </div>
-                            
-                            <div class="lg:col-span-3 flex flex-col gap-2">
-                                <div class="flex gap-1">
-                                    <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2 text-xs border rounded font-bold transition-all ${item.status === 'compliant' ? 'selected-compliant shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}">YES</button>
-                                    <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2 text-xs border rounded font-bold transition-all ${item.status === 'non-compliant' ? 'selected-non-compliant shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}">NO</button>
-                                    <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2 text-xs border rounded font-bold transition-all ${item.status === 'na' ? 'selected-na shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}">N/A</button>
+                        <div class="flex flex-col lg:flex-row gap-4">
+                            <div class="flex-1"><p class="text-sm font-bold text-slate-800">${question}</p>
+                                <textarea oninput="autoResize(this)" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full mt-2 border border-slate-100 rounded-lg p-2 text-sm" placeholder="Observations...">${item.remarks}</textarea>
+                                
+                                <div class="flex gap-2 mt-2 flex-wrap" style="display: flex; flex-wrap: wrap;">
+                                    ${item.photos.map((p, pi) => `
+                                        <div class="relative avoid-break">
+                                            <img src="${p}" class="w-32 h-32 object-cover rounded shadow-sm cursor-pointer border border-slate-200" onclick="document.getElementById('photo-lightbox-img').src='${p}'; document.getElementById('photo-lightbox').classList.add('open')">
+                                            <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-[10px] shadow-sm">&times;</button>
+                                        </div>
+                                    `).join('')}
                                 </div>
-                                <button onclick="app.triggerPhotoUpload(${idx})" class="text-xs bg-slate-50 hover:bg-slate-100 transition-colors py-2 rounded border border-slate-200 font-bold text-slate-600 flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> Add Photo</button>
                             </div>
-                        </div>
-                        
-                        <div class="flex gap-3 mt-3 flex-wrap ${item.photos.length > 0 ? '' : 'hidden'}">
-                            ${item.photos.map((p, pi) => `
-                            <div class="relative group">
-                                <img src="${p}" onclick="app.openLightbox('${p}')" class="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg border border-slate-200 shadow-sm cursor-zoom-in print:w-48 print:h-auto print:max-h-48 print:object-contain transition-transform hover:scale-105">
-                                <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md no-print opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-times"></i></button>
-                            </div>`).join('')}
+                            <div class="flex flex-col gap-2 min-w-[150px]">
+                                <div class="flex gap-1"><button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50'}">YES</button><button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50'}">NO</button><button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-2 text-xs border rounded ${item.status === 'na' ? 'selected-na' : 'bg-slate-50'}">N/A</button></div>
+                                <button onclick="app.triggerPhotoUpload(${idx})" class="text-xs bg-slate-50 py-2 rounded border border-slate-200 hover:bg-slate-100 transition-colors">Add Photo</button>
+                            </div>
                         </div>
                     `;
                     container.appendChild(row);
                 });
 
-                this.updateStorageBadge();
+                // Ensure all textareas resize correctly immediately after rendering
+                setTimeout(() => {
+                    document.querySelectorAll('textarea').forEach(autoResize);
+                }, 0);
             },
             togglePreview() { document.body.classList.toggle('preview-mode'); }
         };
