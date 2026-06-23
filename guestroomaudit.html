@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#4f46e5">
-    <!-- Permissive Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,7 +12,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Native App Feel for iOS/Android */
         body {
             -webkit-tap-highlight-color: transparent;
             padding-top: env(safe-area-inset-top);
@@ -26,11 +24,9 @@
             touch-action: manipulation;
         }
 
-        /* Hide scrollbars for smooth swiping on mobile */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Print media query */
         @media print {
             body { background-color: white !important; color: black !important; font-size: 11px !important; line-height: 1.3 !important; }
             .no-print { display: none !important; }
@@ -51,7 +47,6 @@
             * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
         }
         
-        /* On-Screen Preview Mode */
         body.preview-mode { background-color: white !important; color: black !important; }
         body.preview-mode .no-print { display: none !important; }
         body.preview-mode .print-only { display: block !important; }
@@ -65,7 +60,6 @@
         }
         body.preview-mode #exit-preview-btn { display: flex !important; }
 
-        /* Status Toggles */
         .status-btn.selected-yes { background-color: #10b981; color: white; border-color: #10b981; }
         .status-btn.selected-no { background-color: #ef4444; color: white; border-color: #ef4444; }
         .status-btn.selected-na { background-color: #64748b; color: white; border-color: #64748b; }
@@ -73,12 +67,10 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-    <!-- Exit Preview Floating Button -->
     <button id="exit-preview-btn" onclick="app.togglePreview()" class="fixed bottom-8 right-8 bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-50 transition-transform hover:scale-105 hidden items-center gap-2">
         <i class="fa-solid fa-eye-slash"></i> Exit Preview
     </button>
 
-    <!-- Dashboard View -->
     <div id="dashboard-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300">
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
             <div>
@@ -113,12 +105,10 @@
             </div>
 
             <ul id="report-list" class="divide-y divide-slate-100">
-                <!-- Reports injected via JS -->
             </ul>
         </div>
     </div>
 
-    <!-- Trash View -->
     <div id="trash-view" class="max-w-5xl mx-auto p-4 sm:p-6 transition-opacity duration-300 hidden">
         <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 mt-4 sm:mt-6 gap-4">
             <div>
@@ -142,15 +132,11 @@
             </div>
 
             <ul id="trash-list" class="divide-y divide-slate-100">
-                <!-- Trashed Reports injected via JS -->
             </ul>
         </div>
     </div>
 
-    <!-- Editor View -->
     <div id="editor-view" class="max-w-5xl mx-auto p-3 sm:p-6 hidden print:p-0 print:max-w-none print:block">
-        
-        <!-- Top Action Bar -->
         <div class="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-slate-200 sticky top-0 z-50 gap-3">
             <div class="flex justify-between w-full sm:w-auto items-center">
                 <button onclick="app.showDashboard()" class="text-slate-600 hover:text-slate-900 flex items-center gap-2 font-medium transition-colors text-sm sm:text-base">
@@ -172,7 +158,6 @@
             </div>
         </div>
 
-        <!-- Report Header -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border print:p-4 print:mb-2">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-6 gap-4 print:mb-2 print:pb-2">
                 <div>
@@ -209,14 +194,11 @@
             </div>
         </div>
 
-        <!-- Checklist -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print-shadow-none print-border mb-6">
             <div id="checklist-container" class="divide-y divide-slate-100">
-                <!-- Items Injected -->
             </div>
         </div>
 
-        <!-- Final Observations -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-6 print-shadow-none print-border avoid-break print:p-4 print:mb-2">
             <div class="flex justify-between items-center mb-3 print:mb-1">
                 <label class="block text-lg font-bold text-slate-900 print:text-base">Overall Remarks & Maintenance Issues</label>
@@ -231,9 +213,7 @@
             <div id="general-photos-container" class="mt-4 flex gap-3 overflow-x-auto pb-2 hide-scrollbar touch-pan-x empty:hidden print:mt-2"></div>
         </div>
 
-        <!-- Hidden Global Observation Photo Input -->
         <input type="file" id="general-photo-upload" accept="image/*" capture="environment" multiple class="hidden" onchange="app.handleGeneralPhotoUpload(event)">
-        <!-- Hidden Item-specific Photo Input -->
         <input type="file" id="item-photo-upload" accept="image/*" capture="environment" multiple class="hidden">
 
     </div>
@@ -251,14 +231,11 @@
         }
 
         const AUDIT_QUESTIONS = [
-            // Door & Entrance
             { cat: "Door & Entrance", text: "Room door exterior clean and free of marks/dust." },
             { cat: "Door & Entrance", text: "Electronic lock functioning correctly, green light indicates properly." },
             { cat: "Door & Entrance", text: "Peephole is clean and unobstructed." },
             { cat: "Door & Entrance", text: "DND/Make up Room signs are available and clean." },
             { cat: "Door & Entrance", text: "Evacuation map securely posted behind the door." },
-
-            // Bedroom Area
             { cat: "Bedroom Area", text: "Carpet vacuumed, free of stains, debris, and odor." },
             { cat: "Bedroom Area", text: "Bed neatly made with correct folding standards." },
             { cat: "Bedroom Area", text: "Bed linens are completely clean, crisp, and free from any stains or tears." },
@@ -266,8 +243,6 @@
             { cat: "Bedroom Area", text: "Under the bed is completely clear of dust, debris, and previous guest items." },
             { cat: "Bedroom Area", text: "Windows and window sills are clean, no smudges or dust." },
             { cat: "Bedroom Area", text: "Curtains/Sheers operate smoothly, are hung correctly, and free of stains." },
-
-            // Furniture & Fixtures
             { cat: "Furniture & Fixtures", text: "All surfaces (desks, nightstands, tables) are dusted and polished." },
             { cat: "Furniture & Fixtures", text: "Drawers are clean inside, empty of previous guest belongings." },
             { cat: "Furniture & Fixtures", text: "TV screen is clean, no smudges. TV is functioning." },
@@ -275,8 +250,6 @@
             { cat: "Furniture & Fixtures", text: "All lamps and light fixtures functioning, bulbs working, shades straight/dust-free." },
             { cat: "Furniture & Fixtures", text: "Telephone is clean, functioning, and correctly positioned." },
             { cat: "Furniture & Fixtures", text: "AC/Thermostat is working and set to the standard temperature." },
-
-            // Minibar & Wardrobe
             { cat: "Wardrobe & Amenities", text: "Wardrobe interior is dusted and clean." },
             { cat: "Wardrobe & Amenities", text: "Correct number of hangers provided and neatly arranged." },
             { cat: "Wardrobe & Amenities", text: "Iron and ironing board are clean and available." },
@@ -284,8 +257,6 @@
             { cat: "Wardrobe & Amenities", text: "Minibar/Fridge is clean, odor-free, and correctly stocked (if applicable)." },
             { cat: "Wardrobe & Amenities", text: "Kettle/Coffee maker clean inside and out. Cups and glassware spotless." },
             { cat: "Wardrobe & Amenities", text: "Complimentary water and tea/coffee supplies correctly stocked." },
-
-            // Bathroom
             { cat: "Bathroom", text: "Bathroom door, hinges, and hooks are clean." },
             { cat: "Bathroom", text: "Mirror is perfectly clean, no streaks or spots." },
             { cat: "Bathroom", text: "Sink, faucet, and countertop are dry, polished, and free of watermarks." },
@@ -298,8 +269,6 @@
             { cat: "Bathroom", text: "Bathroom floor is clean, dry, and free of hair/debris, including corners." },
             { cat: "Bathroom", text: "Exhaust fan is functioning and cover is dust-free." },
             { cat: "Bathroom", text: "Hairdryer is clean, functioning, and properly stored." },
-
-            // General Impression
             { cat: "General Impression", text: "Room has a fresh, neutral, and welcoming scent (no foul odors)." },
             { cat: "General Impression", text: "Trash bins are empty, clean inside and out, with fresh liners." }
         ];
@@ -322,7 +291,7 @@
                     this.reports = [];
                 }
 
-                this.cleanUpTrash(); // Ensures 30-day strict cleanup happens on load
+                this.cleanUpTrash(); 
                 this.renderDashboard();
             },
 
@@ -333,10 +302,9 @@
 
                 this.reports = this.reports.filter(report => {
                     if (report.deletedAt) {
-                        // Check if it's older than 30 days
                         if (now - report.deletedAt > THIRTY_DAYS) {
                             changed = true;
-                            return false; // Permanently delete because it is > 30 days
+                            return false; 
                         }
                     }
                     return true;
@@ -494,13 +462,34 @@
                 }
             },
 
+            // TARGETED DOM UPDATE FIX - Replaces Full Renders
             updateItemStatus(index, status) {
                 const report = this.getCurrentReport();
-                if (report) {
-                    report.items[index].status = (report.items[index].status === status) ? null : status;
-                    this.saveToLocal();
+                if (!report) return;
+
+                const newStatus = (report.items[index].status === status) ? null : status;
+                report.items[index].status = newStatus;
+                
+                this.saveToLocal();
+                this.updateScoreUI();
+
+                // Instantly target the specific buttons rather than destroying the list
+                const row = document.getElementById(`audit-item-${index}`);
+                if (row) {
+                    const yesBtn = row.querySelector('.btn-yes');
+                    const noBtn = row.querySelector('.btn-no');
+                    const naBtn = row.querySelector('.btn-na');
+
+                    yesBtn.className = `status-btn btn-yes flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${newStatus === 'yes' ? 'selected-yes' : 'text-emerald-600 hover:bg-emerald-50'}`;
+                    noBtn.className = `status-btn btn-no flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${newStatus === 'no' ? 'selected-no' : 'text-red-600 hover:bg-red-50'}`;
+                    naBtn.className = `status-btn btn-na flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${newStatus === 'na' ? 'selected-na' : 'text-slate-500 hover:bg-slate-50'}`;
+                    
+                    const printStatus = row.querySelector('.print-status-text');
+                    if (printStatus) {
+                        printStatus.textContent = `Status: ${newStatus === 'yes' ? 'Yes' : newStatus === 'no' ? 'No' : newStatus === 'na' ? 'N/A' : 'Not Checked'}`;
+                    }
+                } else {
                     this.renderChecklist();
-                    this.updateScoreUI();
                 }
             },
 
@@ -512,14 +501,13 @@
                 }
             },
 
-            // Image Utilities - Optimised for Clarity and PDF size
             compressImage(file, callback) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
-                        // Threshold 800px ensures good detail for audit evidence
+                        // Kept unchanged to ensure image size constraints remain perfectly met
                         const MAX_WIDTH = 800;
                         const MAX_HEIGHT = 800;
                         let width = img.width;
@@ -533,12 +521,10 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         
-                        // High quality smoothing for clear evidence
                         ctx.imageSmoothingEnabled = true;
                         ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Quality 0.7 keeps file size manageable (~180KB) while maintaining clarity
                         callback(canvas.toDataURL('image/jpeg', 0.7)); 
                     };
                     img.src = e.target.result;
@@ -563,6 +549,8 @@
                         this.renderGeneralPhotos();
                     });
                 });
+                // FIX: Allows the user to select the same physical file again without issue
+                event.target.value = ''; 
             },
 
             removeGeneralPhoto(idx) {
@@ -603,9 +591,30 @@
                     this.compressImage(file, (base64Img) => {
                         report.items[idx].photos.push(base64Img);
                         this.saveToLocal();
-                        this.renderChecklist();
+                        // TARGETED DOM UPDATE FIX - Only redrawing the targeted item's photo area 
+                        this.renderSpecificItemPhotos(idx);
                     });
                 });
+                // FIX: Allows the user to select the same physical file again without issue
+                event.target.value = ''; 
+            },
+
+            // New targeted update function to insert photos directly without clearing out checkmarks
+            renderSpecificItemPhotos(idx) {
+                const report = this.getCurrentReport();
+                const container = document.getElementById(`photo-container-${idx}`);
+                if (container && report) {
+                    container.innerHTML = (report.items[idx].photos || []).map((p, pi) => `
+                        <div class="relative group shrink-0 w-20 h-20 rounded border border-slate-200 overflow-hidden print:w-16 print:h-16">
+                            <img src="${p}" class="w-full h-full object-cover">
+                            <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="no-print absolute top-0 right-0 bg-red-500 text-white w-5 h-5 rounded-bl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                } else {
+                    this.renderChecklist();
+                }
             },
 
             removeItemPhoto(itemIdx, photoIdx) {
@@ -613,7 +622,7 @@
                 if (report && confirm("Remove this evidence photo?")) {
                     report.items[itemIdx].photos.splice(photoIdx, 1);
                     this.saveToLocal();
-                    this.renderChecklist();
+                    this.renderSpecificItemPhotos(itemIdx);
                 }
             },
 
@@ -757,6 +766,7 @@
                     }
 
                     const row = document.createElement('div');
+                    row.id = `audit-item-${index}`; // FIX: Added targetable ID
                     row.className = "p-4 sm:p-6 hover:bg-slate-50/50 transition-colors avoid-break border-b border-slate-100 last:border-0 print:p-1.5 print:py-1";
 
                     const photosHtml = (itemData.photos || []).map((p, pi) => `
@@ -775,27 +785,27 @@
                                     <span class="text-slate-400 text-sm font-bold mr-2 mt-1 print:text-[10px] print:mt-0">${index + 1}.</span>
                                     <div class="flex-1">
                                         <span class="text-slate-800 font-medium print:text-[10px] print:leading-tight">${escapeHTML(q.text)}</span>
-                                        <div class="mt-3 flex flex-wrap gap-2 empty:hidden print:mt-1">
+                                        <div id="photo-container-${index}" class="mt-3 flex flex-wrap gap-2 empty:hidden print:mt-1">
                                             ${photosHtml}
                                         </div>
                                     </div>
                                 </div>
-                                <div class="hidden print:block mt-1 font-bold print:text-[10px]">
+                                <div class="print-status-text hidden print:block mt-1 font-bold print:text-[10px]">
                                     Status: ${isYes ? 'Yes' : isNo ? 'No' : isNA ? 'N/A' : 'Not Checked'}
                                 </div>
                             </div>
 
                             <div class="md:col-span-3 flex gap-1.5 no-print items-center">
                                 <button onclick="app.updateItemStatus(${index}, 'yes')" 
-                                    class="status-btn flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isYes ? 'selected-yes' : 'text-emerald-600 hover:bg-emerald-50'}">
+                                    class="status-btn btn-yes flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isYes ? 'selected-yes' : 'text-emerald-600 hover:bg-emerald-50'}">
                                     Yes
                                 </button>
                                 <button onclick="app.updateItemStatus(${index}, 'no')" 
-                                    class="status-btn flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isNo ? 'selected-no' : 'text-red-600 hover:bg-red-50'}">
+                                    class="status-btn btn-no flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isNo ? 'selected-no' : 'text-red-600 hover:bg-red-50'}">
                                     No
                                 </button>
                                 <button onclick="app.updateItemStatus(${index}, 'na')" 
-                                    class="status-btn flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isNA ? 'selected-na' : 'text-slate-500 hover:bg-slate-50'}">
+                                    class="status-btn btn-na flex-1 py-2.5 border border-slate-200 rounded-md text-sm font-medium transition-colors ${isNA ? 'selected-na' : 'text-slate-500 hover:bg-slate-50'}">
                                     N/A
                                 </button>
                                 <button onclick="app.triggerItemPhotoUpload(${index})" class="p-2.5 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors" title="Evidence">
