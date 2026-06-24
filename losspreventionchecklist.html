@@ -234,7 +234,6 @@
             "[Access Control] Vehicle entry prohibited for loading/unloading at Mehfill lawn?",
             
             "[Vehicle Checks] Was a thorough night-shift inspection conducted on all vehicles to screen for security risks, intoxicated drivers/guests, and prohibited items?",
-            "[Vehicle Checks] Water tankers inspected at both entry and exit?",
             "[Vehicle Checks] Water tankers verified at both full and empty states?",
             "[Vehicle Checks] Are EV vehicle inspected for damage after female staff drops?",
             "[Vehicle Checks] Are all vehicles parked on the hotel premises accounted for, logged in the register, and any discrepancies immediately escalated to the Team Leader and LPM?",
@@ -252,7 +251,6 @@
             "[Staff & Operations] Overnight event staff pre-approved and monitored by security?",
             "[Staff & Operations] Vendor - Overnight event staff pre-approved and monitored by security?",
             "[Staff & Operations] Female staff drops monitored and logged by security?",
-            "[Staff & Operations] Driver washroom opened and maintained as per scheduled timings?",
             "[Staff & Operations] Are basement driver restroom operational hours strictly followed?",
             "[Staff & Operations] Are the designated operational hours for the male and female locker room showers strictly followed?",
             "[Staff & Operations] Milk and curd deliveries inspected and logged in the inward register?",
@@ -537,42 +535,4 @@
                     row.className = "bg-white border-x border-b border-slate-200 p-5 sm:p-6 avoid-break last:rounded-b-2xl print:p-2 print:border-slate-100";
                     
                     const photos = (item.photos || []).map((p, pi) => `
-                        <div class="relative shrink-0 w-24 h-24 sm:w-32 sm:h-32 border border-slate-200 rounded-lg overflow-hidden print:w-48 print:h-48">
-                            <a href="${p}" target="_blank" onclick="event.preventDefault();openLightbox('${p}')" class="block w-full h-full cursor-zoom-in">
-                                <img src="${p}" class="w-full h-full object-cover">
-                            </a>
-                            <button onclick="app.removeItemPhoto(${idx}, ${pi})" class="no-print absolute top-0.5 right-0.5 bg-black/60 text-white w-5 h-5 rounded-full"><i class="fa-solid fa-xmark text-[10px]"></i></button>
-                        </div>
-                    `).join('');
-
-                    row.innerHTML = `
-                        <div class="flex flex-col lg:flex-row gap-4 sm:gap-6 print:gap-2">
-                            <div class="flex-1">
-                                <div class="flex items-start gap-3">
-                                    <span class="text-blue-700 font-black text-xs mt-0.5 print:text-slate-400">${idx+1}.</span>
-                                    <p class="text-sm font-bold text-slate-800 print:text-[11px] leading-relaxed">${question}</p>
-                                </div>
-                                <div class="mt-3 no-print"><textarea oninput="this.parentElement.nextElementSibling.textContent = this.value || '---'" onchange="app.updateItemRemarks(${idx}, this.value)" class="w-full border border-slate-100 rounded-lg p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none transition-shadow" placeholder="Observations..." rows="2">${item.remarks}</textarea></div>
-                                <div class="hidden print-only text-[11px] text-slate-800 mt-2 font-medium whitespace-pre-wrap break-words">${item.remarks || '---'}</div>
-                                <div class="mt-3 flex gap-3 overflow-x-auto print:flex-wrap print:mt-1">${photos}</div>
-                            </div>
-                            <div class="no-print flex flex-col gap-2 min-w-[150px] w-full lg:w-auto">
-                                <div class="flex gap-1 w-full">
-                                    <button onclick="app.updateItemStatus(${idx}, 'compliant')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'compliant' ? 'selected-compliant' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">YES</button>
-                                    <button onclick="app.updateItemStatus(${idx}, 'non-compliant')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'non-compliant' ? 'selected-non-compliant' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">NO</button>
-                                    <button onclick="app.updateItemStatus(${idx}, 'na')" class="status-btn flex-1 py-3 lg:py-2 border border-slate-100 rounded-lg text-[10px] font-black transition-all ${item.status === 'na' ? 'selected-na' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">N/A</button>
-                                </div>
-                                <button onclick="app.triggerPhotoUpload(${idx})" class="text-[10px] font-black bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-700 py-3 lg:py-2 rounded-lg border border-slate-100 transition-all uppercase tracking-tighter w-full"><i class="fa-solid fa-camera mr-1"></i> Add Evidence</button>
-                            </div>
-                            <div class="hidden print-only text-[10px] font-black text-right uppercase pt-1">[${item.status || 'PENDING'}]</div>
-                        </div>
-                    `;
-                    container.appendChild(row);
-                });
-            }
-        };
-
-        window.onload = () => app.init();
-    </script>
-</body>
-</html>
+                        <div class="relative shrink-0 w-24 h-24 sm:w-32 sm:h-32 border border-slate-
