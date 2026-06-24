@@ -4,144 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Audit-Sphere Central Dashboard</title>
+    <title>Hotel Audit Central Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         body {
             -webkit-tap-highlight-color: transparent;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
-            background-color: #f8fafc;
         }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .module-card:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-12">
 
-    <!-- Header -->
-    <header class="bg-slate-900 text-white p-6 shadow-md sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
+    <header class="bg-slate-900 text-white pt-10 pb-12 px-6 rounded-b-[2.5rem] shadow-xl mb-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div class="absolute right-[-10%] top-[-20%] text-9xl"><i class="fa-solid fa-shield-halved"></i></div>
+        </div>
+        <div class="max-w-5xl mx-auto relative z-10 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight">Audit Portal</h1>
-                <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Centralized Departmental Audits</p>
+                <h1 class="text-3xl sm:text-4xl font-black tracking-tight mb-2">Audit Central Hub</h1>
+                <p class="text-slate-300 text-sm sm:text-base font-medium">Digital Checklist & Operations Manager</p>
             </div>
-            <div class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700">
-                <i class="fa-solid fa-shield-halved text-sky-400"></i>
+            <div class="bg-slate-800/80 p-4 rounded-2xl hidden sm:flex items-center justify-center border border-slate-700">
+                <i class="fa-solid fa-hotel text-3xl text-blue-400"></i>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-4 sm:p-6 overflow-y-auto max-w-4xl mx-auto w-full">
-        
-        <!-- Front Office & Management Section -->
-        <div class="mb-8">
-            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 pl-1 border-l-4 border-blue-500">Front Office & Management</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <a href="checkin.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-user-check text-xl"></i>
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 space-y-10">
+
+        <section>
+            <div class="flex items-center gap-3 mb-4 px-2">
+                <i class="fa-solid fa-user-tie text-slate-400"></i>
+                <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest">Managerial & Overviews</h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="modchecklist.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-teal-500 transition-all group block">
+                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-clipboard-list"></i>
                     </div>
-                    <span class="text-sm font-bold text-slate-700">Check-In</span>
+                    <h3 class="font-bold text-slate-800 text-lg">MOD Audit</h3>
+                    <p class="text-xs text-slate-500 mt-1">Manager on Duty Checklist</p>
                 </a>
                 
-                <a href="checkoutaudit.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-right-from-bracket text-xl"></i>
+                <a href="nightaudit.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-500 transition-all group block">
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-moon"></i>
                     </div>
-                    <span class="text-sm font-bold text-slate-700">Check-Out</span>
-                </a>
-
-                <a href="nightaudit.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-teal-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-file-invoice text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-700">Night Audit</span>
-                </a>
-
-                <a href="modchecklist.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-teal-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-user-tie text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-700">MOD Checklist</span>
-                </a>
-
-                <a href="wellness.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-indigo-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-spa text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-700">Spa & Wellness</span>
+                    <h3 class="font-bold text-slate-800 text-lg">Night Audit</h3>
+                    <p class="text-xs text-slate-500 mt-1">Duty Manager Night Rounds</p>
                 </a>
             </div>
-        </div>
+        </section>
 
-        <!-- Housekeeping Section -->
-        <div class="mb-8">
-            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 pl-1 border-l-4 border-purple-500">Housekeeping</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <a href="guestroomaudit.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-purple-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-bed text-xl"></i>
+        <section>
+            <div class="flex items-center gap-3 mb-4 px-2">
+                <i class="fa-solid fa-shield text-slate-400"></i>
+                <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest">Security & Safety</h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="losspreventionchecklist.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-600 transition-all group block">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-700 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-shield-halved"></i>
                     </div>
-                    <span class="text-sm font-bold text-slate-700">Guest Room</span>
+                    <h3 class="font-bold text-slate-800 text-lg">Loss Prevention</h3>
+                    <p class="text-xs text-slate-500 mt-1">Daily Security & Patrol Checks</p>
                 </a>
             </div>
-        </div>
+        </section>
 
-        <!-- Food & Beverage Section -->
-        <div class="mb-8">
-            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 pl-1 border-l-4 border-rose-500">Food & Beverage Service</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <a href="irdaudit.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-rose-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-bell-concierge text-xl"></i>
+        <section>
+            <div class="flex items-center gap-3 mb-4 px-2">
+                <i class="fa-solid fa-bed text-slate-400"></i>
+                <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest">Front Office & Rooms</h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="checkin.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-sky-500 transition-all group block">
+                    <div class="w-12 h-12 bg-sky-50 text-sky-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-bell-concierge"></i>
                     </div>
-                    <span class="text-sm font-bold text-slate-700">In-Room Dining</span>
+                    <h3 class="font-bold text-slate-800 text-lg">Check-In Audit</h3>
+                    <p class="text-xs text-slate-500 mt-1">Arrivals & Registration Flow</p>
+                </a>
+                
+                <a href="checkoutaudit.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-500 transition-all group block">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-suitcase-rolling"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">Check-Out Audit</h3>
+                    <p class="text-xs text-slate-500 mt-1">Departures & Billing</p>
                 </a>
 
-                <a href="springbreakfastaudit.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-amber-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-mug-hot text-xl"></i>
+                <a href="guestroomaudit.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-violet-500 transition-all group block">
+                    <div class="w-12 h-12 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-violet-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-door-open"></i>
                     </div>
-                    <span class="text-sm font-bold text-slate-700">Spring B'Fast</span>
-                </a>
-
-                <a href="springlunchdinner.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-indigo-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-wine-glass text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-700">Spring Lunch/Dinner</span>
-                </a>
-
-                <a href="mysouth.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-rose-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-bowl-rice text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-slate-700">MySouth</span>
+                    <h3 class="font-bold text-slate-800 text-lg">Guest Room Audit</h3>
+                    <p class="text-xs text-slate-500 mt-1">Housekeeping & Room Standards</p>
                 </a>
             </div>
-        </div>
+        </section>
 
-        <!-- Culinary Art Section -->
-        <div class="mb-4">
-            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 pl-1 border-l-4 border-orange-500">Culinary Art</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                <a href="fssai.html" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-orange-200 transition-all flex flex-col items-center text-center group">
-                    <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-clipboard-check text-xl"></i>
+        <section>
+            <div class="flex items-center gap-3 mb-4 px-2">
+                <i class="fa-solid fa-utensils text-slate-400"></i>
+                <h2 class="text-sm font-black text-slate-500 uppercase tracking-widest">Food & Beverage</h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="springbreakfastaudit.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-500 transition-all group block">
+                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-mug-saucer"></i>
                     </div>
-                    <span class="text-sm font-bold text-slate-700">FSSAI Compliance</span>
+                    <h3 class="font-bold text-slate-800 text-lg">Spring B'Fast Audit</h3>
+                    <p class="text-xs text-slate-500 mt-1">Breakfast Buffet Operations</p>
+                </a>
+
+                <a href="mysouth.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-rose-500 transition-all group block">
+                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-bowl-food"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">MySouth Audit</h3>
+                    <p class="text-xs text-slate-500 mt-1">Restaurant Service Standards</p>
+                </a>
+
+                <a href="irdaudit.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-teal-600 transition-all group block">
+                    <div class="w-12 h-12 bg-teal-50 text-teal-700 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-teal-700 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-bell-concierge"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">In-Room Dining</h3>
+                    <p class="text-xs text-slate-500 mt-1">Room Service Operations</p>
+                </a>
+
+                <a href="fssai.html" class="module-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-green-600 transition-all group block">
+                    <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">FSSAI Safety</h3>
+                    <p class="text-xs text-slate-500 mt-1">Food Safety & Hygiene Standards</p>
                 </a>
             </div>
-        </div>
+        </section>
 
     </main>
+
+    <footer class="text-center text-slate-400 text-xs mt-12 pb-6">
+        <p>Operational Audit Hub &bull; Local Storage Empowered</p>
+    </footer>
+
 </body>
 </html>
