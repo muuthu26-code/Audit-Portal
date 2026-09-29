@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Kitchen / IRD - Post-Fumigation Gap Audit Report</title>
+    <!-- html2pdf library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-dark: #1e293b;
+            --border: #cbd5e1;
+            --bg-light: #f8fafc;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1350px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            white-space: pre-wrap;
+        }
+
+        .header-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            background: var(--bg-light);
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: pre-wrap;
+        }
+
+        input[type="text"], input[type="date"], textarea {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            width: 100%;
+            background-color: #ffffff;
+            transition: border-color 0.2s;
+            white-space: pre-wrap;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.15);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 55px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background: #ffffff;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            vertical-align: top;
+            text-align: left;
+            font-size: 0.88rem;
+            white-space: pre-wrap;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.82rem;
+            letter-spacing: 0.4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        .status-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .status-radio {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+
+        .status-radio.completed-radio {
+            accent-color: var(--success);
+        }
+
+        .status-radio.not-completed-radio {
+            accent-color: var(--danger);
+        }
+
+        .photo-upload-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .photo-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 5px;
+        }
+
+        .img-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .photo-preview img {
+            width: 65px;
+            height: 65px;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .remove-img-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            line-height: 18px;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+            font-weight: bold;
+        }
+
+        .footer-section {
+            margin-top: 20px;
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            background: var(--bg-light);
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        .controls {
+            position: sticky;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 2px solid var(--border);
+            margin-top: 25px;
+            z-index: 100;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        button.btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.1s, opacity 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button.btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-save { background-color: #16a34a; }
+        .btn-save:hover { background-color: #15803d; }
+
+        .btn-pdf { background-color: #dc2626; }
+        .btn-pdf:hover { background-color: #b91c1c; }
+
+        .btn-clear { background-color: #64748b; }
+        .btn-clear:hover { background-color: #475569; }
+
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            z-index: 9999;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            padding-top: 25vh;
+            backdrop-filter: blur(3px);
+        }
+
+        @media (max-width: 768px) {
+            .controls { flex-direction: column; }
+            button.btn { width: 100%; justify-content: center; }
+        }
+
+        @media print {
+            .controls, .photo-upload-container, .remove-img-btn {
+                display: none !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay">Generating PDF Report, please wait...</div>
+
+<div class="container" id="report-container">
+    <h2>MAIN KITCHEN / IRD – POST-FUMIGATION GAP AUDIT REPORT</h2>
+    
+    <div class="header-info">
+        <div class="field-group">
+            <label for="auditDate">Audit Date:</label>
+            <input type="date" id="auditDate">
+        </div>
+        <div class="field-group">
+            <label for="fumigationDate">Fumigation Date:</label>
+            <input type="date" id="fumigationDate">
+        </div>
+        <div class="field-group">
+            <label for="area">Area:</label>
+            <input type="text" id="area" placeholder="e.g. Main Kitchen / IRD">
+        </div>
+        <div class="field-group">
+            <label for="auditedBy">Audited By:</label>
+            <input type="text" id="auditedBy" placeholder="Inspector Name">
+        </div>
+        <div class="field-group">
+            <label for="pestControlPerson">Pest Control Person:</label>
+            <input type="text" id="pestControlPerson" placeholder="Pest Control Representative">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">Sl. No.</th>
+                    <th style="width: 23%;">Audit Point</th>
+                    <th style="width: 18%;">Observation / Gap</th>
+                    <th style="width: 9%;">Completed</th>
+                    <th style="width: 9%;">Not Completed</th>
+                    <th style="width: 18%;">Remarks</th>
+                    <th style="width: 18%;">Photo Evidence</th>
+                </tr>
+            </thead>
+            <tbody id="checklist-body">
+                <!-- Populated via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-section">
+        <div class="field-group">
+            <label for="overallObservation">Overall Observation / Summary:</label>
+            <textarea id="overallObservation" placeholder="Enter overall gap audit summary and critical observations..."></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="controls" id="controls">
+    <button class="btn btn-save" onclick="saveData()">💾 Manual Save</button>
+    <button class="btn btn-pdf" onclick="generatePDF()">📄 Generate PDF Report</button>
+    <button class="btn btn-clear" onclick="clearData()">🗑️ Clear All Data</button>
+</div>
+
+<script>
+    const auditPointsData = [
+        "Damaged elecrical socket in Chef Cabin",
+        "Damaged wall with open gaps in Chef Cabin",
+        "Damaged wall tile in Chinese Section",
+        "Damaged electrical socket plate in D Bar",
+        "Gap observed around the wall-mounted electrical socket in D Bar",
+        "Damaged wall tile in D Bar",
+        "Damaged wall tile in D Bar",
+        "Damaged wall kota stone in IRD",
+        "Gap / Defect observed in IRD",
+        "Unsealed opening in IRD",
+        "Damaged wall / tile surface in IRD",
+        "Gap around the plate in Pantry",
+        "Damaged electrical socket in Pantry",
+        "Gap around the tap in Potwash Area",
+        "Damaged tile in South Indian",
+        "Damaged wall stone in Tandoor",
+        "Gap between wall and ss plate in Tandoor",
+        "Damaged wall in Spring",
+        "Broken elecrical socket in Spring",
+        "Broken plate warmer in Spring"
+    ];
+
+    const tbody = document.getElementById('checklist-body');
+    let imageDataStore = {};
+
+    function renderTable() {
+        tbody.innerHTML = '';
+        auditPointsData.forEach((point, index) => {
+            const rowId = index + 1;
+            imageDataStore[rowId] = imageDataStore[rowId] || [];
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: center; font-weight: bold;">${rowId}</td>
+                <td>${point}</td>
+                <td><textarea id="observation_${rowId}" placeholder="Enter gap / observation details..."></textarea></td>
+                <td class="status-cell">
+                    <input type="radio" name="status_${rowId}" id="completed_${rowId}" value="completed" class="status-radio completed-radio" onclick="toggleRadio(this)">
+                </td>
+                <td class="status-cell">
+                    <input type="radio" name="status_${rowId}" id="not_completed_${rowId}" value="not_completed" class="status-radio not-completed-radio" onclick="toggleRadio(this)">
+                </td>
+                <td><textarea id="remarks_${rowId}" placeholder="Enter corrective actions / remarks..."></textarea></td>
+                <td>
+                    <div class="photo-upload-container" data-html2canvas-ignore>
+                        <input type="file" accept="image/*" capture="environment" multiple onchange="processImages(this, ${rowId})">
+                    </div>
+                    <div class="photo-preview" id="preview_${rowId}"></div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        loadData();
+    }
+
+    function toggleRadio(radio) {
+        if (radio.dataset.previousState === 'checked') {
+            radio.checked = false;
+            radio.dataset.previousState = 'unchecked';
+        } else {
+            const group = document.getElementsByName(radio.name);
+            group.forEach(r => r.dataset.previousState = 'unchecked');
+            radio.dataset.previousState = 'checked';
+        }
+    }
+
+    async function processImages(input, rowId) {
+        if (!input.files || input.files.length === 0) return;
+        
+        for (let file of input.files) {
+            await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        const maxWidth = 800;
+                        const scaleSize = maxWidth / img.width;
+                        canvas.width = (img.width > maxWidth) ? maxWidth : img.width;
+                        canvas.height = (img.width > maxWidth) ? (img.height * scaleSize) : img.height;
+                        
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        const timestamp = new Date().toLocaleString();
+                        const fontSize = Math.max(14, Math.floor(canvas.width * 0.028));
+                        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+                        ctx.fillStyle = "#FFD700";
+                        ctx.strokeStyle = "#000000";
+                        ctx.lineWidth = Math.max(2, Math.floor(fontSize * 0.1));
+                        
+                        const textWidth = ctx.measureText(timestamp).width;
+                        const margin = Math.floor(canvas.width * 0.02);
+                        const xPos = canvas.width - textWidth - margin;
+                        const yPos = canvas.height - margin;
+                        
+                        ctx.strokeText(timestamp, xPos, yPos);
+                        ctx.fillText(timestamp, xPos, yPos);
+                        
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.70);
+                        if (!imageDataStore[rowId]) imageDataStore[rowId] = [];
+                        imageDataStore[rowId].push(dataUrl);
+                        
+                        renderThumbnail(rowId, dataUrl, imageDataStore[rowId].length - 1);
+                        resolve();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        input.value = '';
+    }
+
+    function renderThumbnail(rowId, dataUrl, index) {
+        const previewContainer = document.getElementById(`preview_${rowId}`);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'img-wrapper';
+        
+        const previewImg = document.createElement('img');
+        previewImg.src = dataUrl;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-img-btn';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.title = 'Remove Photo';
+        removeBtn.type = 'button';
+        removeBtn.setAttribute('data-html2canvas-ignore', 'true');
+        removeBtn.onclick = function(e) {
+            e.stopPropagation();
+            const wrappers = Array.from(previewContainer.children);
+            const idx = wrappers.indexOf(wrapper);
+            if (idx > -1) {
+                imageDataStore[rowId].splice(idx, 1);
+                wrapper.remove();
+            }
+        };
+        
+        wrapper.appendChild(previewImg);
+        wrapper.appendChild(removeBtn);
+        previewContainer.appendChild(wrapper);
+    }
+
+    function saveData() {
+        const data = {
+            auditDate: document.getElementById('auditDate').value,
+            fumigationDate: document.getElementById('fumigationDate').value,
+            area: document.getElementById('area').value,
+            auditedBy: document.getElementById('auditedBy').value,
+            pestControlPerson: document.getElementById('pestControlPerson').value,
+            overallObservation: document.getElementById('overallObservation').value,
+            rows: {},
+            images: imageDataStore
+        };
+
+        for (let i = 1; i <= auditPointsData.length; i++) {
+            const selectedStatus = document.querySelector(`input[name="status_${i}"]:checked`);
+            data.rows[i] = {
+                observation: document.getElementById(`observation_${i}`).value,
+                status: selectedStatus ? selectedStatus.value : '',
+                remarks: document.getElementById(`remarks_${i}`).value
+            };
+        }
+
+        localStorage.setItem('postFumigationGapAuditData', JSON.stringify(data));
+        alert('Post-Fumigation Gap Audit progress saved successfully!');
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('postFumigationGapAuditData');
+        if (saved) {
+            const data = JSON.parse(saved);
+            document.getElementById('auditDate').value = data.auditDate || '';
+            document.getElementById('fumigationDate').value = data.fumigationDate || '';
+            document.getElementById('area').value = data.area || '';
+            document.getElementById('auditedBy').value = data.auditedBy || '';
+            document.getElementById('pestControlPerson').value = data.pestControlPerson || '';
+            document.getElementById('overallObservation').value = data.overallObservation || '';
+
+            if (data.images) {
+                imageDataStore = data.images;
+                for (let rowId in imageDataStore) {
+                    const previewContainer = document.getElementById(`preview_${rowId}`);
+                    if (previewContainer) {
+                        previewContainer.innerHTML = '';
+                        imageDataStore[rowId].forEach((dataUrl, idx) => {
+                            renderThumbnail(rowId, dataUrl, idx);
+                        });
+                    }
+                }
+            }
+
+            if (data.rows) {
+                for (let i = 1; i <= auditPointsData.length; i++) {
+                    if (data.rows[i]) {
+                        document.getElementById(`observation_${i}`).value = data.rows[i].observation || '';
+                        document.getElementById(`remarks_${i}`).value = data.rows[i].remarks || '';
+                        
+                        if (data.rows[i].status === 'completed') {
+                            const radio = document.getElementById(`completed_${i}`);
+                            if (radio) { radio.checked = true; radio.dataset.previousState = 'checked'; }
+                        } else if (data.rows[i].status === 'not_completed') {
+                            const radio = document.getElementById(`not_completed_${i}`);
+                            if (radio) { radio.checked = true; radio.dataset.previousState = 'checked'; }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function clearData() {
+        if (confirm('Are you sure you want to clear all form entries and attached photos?')) {
+            localStorage.removeItem('postFumigationGapAuditData');
+            location.reload();
+        }
+    }
+
+    function generatePDF() {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.style.display = 'block';
+
+        const element = document.getElementById('report-container');
+        const areaName = document.getElementById('area').value || 'Audit';
+
+        const prevScrollY = window.scrollY;
+        window.scrollTo(0, 0);
+
+        const tableWrapper = document.querySelector('.table-responsive');
+        const prevOverflow = tableWrapper ? tableWrapper.style.overflow : '';
+        if (tableWrapper) tableWrapper.style.overflow = 'visible';
+        
+        const opt = {
+            margin:       [0.3, 0.3, 0.3, 0.3],
+            filename:     `Post_Fumigation_Gap_Audit_${areaName.replace(/\s+/g, '_')}.pdf`,
+            image:        { type: 'jpeg', quality: 0.70 },
+            html2canvas:  { scale: 1.5, useCORS: true, logging: false, letterRendering: true, scrollY: 0, scrollX: 0 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape', compress: true },
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'], avoid: ['.footer-section', 'tr'] }
+        };
+
+        setTimeout(() => {
+            html2pdf().set(opt).from(element).save().then(() => {
+                if (tableWrapper) tableWrapper.style.overflow = prevOverflow;
+                window.scrollTo(0, prevScrollY);
+                overlay.style.display = 'none';
+            }).catch(err => {
+                console.error(err);
+                if (tableWrapper) tableWrapper.style.overflow = prevOverflow;
+                window.scrollTo(0, prevScrollY);
+                alert('Error generating PDF report. Please try again.');
+                overlay.style.display = 'none';
+            });
+        }, 500);
+    }
+
+    window.onload = renderTable;
+</script>
+
+</body>
+</html>
